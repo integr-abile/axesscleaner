@@ -9,9 +9,10 @@ from flatex import expand_file
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
 
 parser.add_argument('-i', dest='input',
-                    help='Input File')
+                    help='Input File (Required). It accepts only .tex files')
 
-parser.add_argument('-o', dest='output', help='Input File')
+parser.add_argument('-o', dest='output', default='',
+                    help='Output File (optional, default: input file with _clean as suffix)')
 
 parser.add_argument('-p', dest='pdflatex', action='store_const',
                     const=True, default=False,
@@ -19,9 +20,6 @@ parser.add_argument('-p', dest='pdflatex', action='store_const',
 
 args = parser.parse_args()
 
-FOLDER_PATH = os.path.abspath(os.path.join(os.path.abspath(args.input), os.pardir))
-MACRO_FILE = os.path.join(FOLDER_PATH, "user_macro.sty")
-TEMP_FILE_PRE_EXPANSION = os.path.join(FOLDER_PATH, "temp_pre.tex")
 
 
 
@@ -43,7 +41,7 @@ TEMP_FILE_PRE_EXPANSION = os.path.join(FOLDER_PATH, "temp_pre.tex")
 #    That is because remove the % some time will result in
 #    compilation failure.
 
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█'):
+def printProgressBar(iteration, total, prefix='', suffix='', decimals=1):
     """
     Call in a loop to create terminal progress bar
     @params:
@@ -56,9 +54,7 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         fill        - Optional  : bar fill character (Str)
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end='\r')
+    print('\r%s %s %s%% %s' % (prefix, '--', percent, suffix), end="\r")
     # Print New Line on Complete
     if iteration == total:
         print()
@@ -326,21 +322,12 @@ def build_subs_regexp(reg):
 def recursive_expansion(lin, available_regexp):
     for subs in available_regexp:
         if not (re.search(subs["reg"], lin)):
-            # print(lin,'does not match',subs["reg"])
             continue
         else:
-            # print(lin,'does not match',subs["reg"])
             try:
                 lin = re.sub(subs["reg"], re.sub(r'([\" \' \\\ ])', r'\\\1', subs["sub"]), lin)
             except Exception as e:
-                print(e)
-                print(lin)
-                # try:
-                #   lin = re.sub(subs["reg"], re.escape(subs["sub"]), lin)
-                # except Exception as e:
-                #   print(e)
-
-        # print('after: '+lin)
+                print(e,lin)
     for subs in available_regexp:
         if not (not (re.search(subs["reg"], lin))):
             return recursive_expansion(lin, available_regexp)
@@ -349,34 +336,57 @@ def recursive_expansion(lin, available_regexp):
     return lin
 
 
-# Begin of actual methods
+# Begin of actual methods. First check if the input is a LaTex file
+if args.input.endswith('.tex'):
+    # Check the number of outputs. If no output is given, create a new one.
+    if not args.output:
+        a = args.input;
+        args.output = a.replace('.tex', '_clean.tex')
+    # Assign the macro file address and some temporary files.
+    FOLDER_PATH = os.path.abspath(os.path.join(os.path.abspath(args.input), os.pardir))
+    MACRO_FILE = os.path.join(FOLDER_PATH, "user_macro.sty")
+    TEMP_FILE_PRE_EXPANSION = os.path.join(FOLDER_PATH, "temp_pre.tex")
 
-
-with open(args.input, 'r') as i:
-    line = strip_comments(i.read())
-    gather_macro(line)
-
-print(MACRO_FILE, os.path.exists(MACRO_FILE))
-if os.path.exists(MACRO_FILE):
-    print('is file!')
-    with open(MACRO_FILE, 'r') as i:
+    # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
+    with open(args.input, 'r') as i:
         line = strip_comments(i.read())
         gather_macro(line)
 
-with open(args.input, 'r') as i:
-    line = strip_comments(i.read())
-    remove_macro(line, TEMP_FILE_PRE_EXPANSION)
-current_path = os.path.split(TEMP_FILE_PRE_EXPANSION)[0]
+    # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
+    if os.path.exists(MACRO_FILE):
+        with open(MACRO_FILE, 'r') as i:
+            line = strip_comments(i.read())
+            gather_macro(line)
+    # Remove the macros from the main file and writes the output to a temp file.
+    with open(args.input, 'r') as i:
+        line = strip_comments(i.read())
+        remove_macro(line, TEMP_FILE_PRE_EXPANSION)
 
-final_text_to_expand = strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
+    # Get path of temp file.
+    current_path = os.path.split(TEMP_FILE_PRE_EXPANSION)[0]
 
-os.remove(TEMP_FILE_PRE_EXPANSION)
-remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
-if args.pdflatex:
-    p = subprocess.Popen(
-        ["perl", "../Perl/AxessibilityPreprocesspdfLatex.pl", "-o", TEMP_FILE_PRE_EXPANSION, args.output])
+    # Include all the external files
+    final_text_to_expand = strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
+    # Remove temp file
+    os.remove(TEMP_FILE_PRE_EXPANSION)
+
+    # Remove macros from the entire file and put the result to temp file
+    remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
+
+
+    #Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
+
+    if args.pdflatex:
+        p = subprocess.Popen(
+            ["perl", "../Perl/AxessibilityPreprocesspdfLatex.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+    else:
+        p = subprocess.Popen(
+            ["perl", "../Perl/AxessibilityPreprocess.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+    # close process.
+    p.communicate()
+
+    # remove spurious file
+    os.remove(TEMP_FILE_PRE_EXPANSION)
+    os.remove(TEMP_FILE_PRE_EXPANSION.replace('.tex', '.bak'))
 else:
-    p = subprocess.Popen(
-        ["perl", "../Perl/AxessibilityPreprocess.pl", "-o", TEMP_FILE_PRE_EXPANSION, args.output])
-p.communicate()
-os.remove(TEMP_FILE_PRE_EXPANSION)
+    print('The file you inserted as input is not a .tex')
