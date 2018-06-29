@@ -2,6 +2,7 @@
 
 
 This python module cleans a LaTex file in order to use the ```axessibility.sty``` package safely. It handles the following:
+
 * User defined macro e.g ```\def, \newcommand```, with and without inputs. 
 * Dollars-defined math environments, e.g ``` $$\sqrt{4}$$``` 
 * Underscore
