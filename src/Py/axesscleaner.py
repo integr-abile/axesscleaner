@@ -41,25 +41,6 @@ args = parser.parse_args()
 #    That is because remove the % some time will result in
 #    compilation failure.
 
-def printProgressBar(iteration, total, prefix='', suffix='', decimals=1):
-    """
-    Call in a loop to create terminal progress bar
-    @params:
-        iteration   - Required  : current iteration (Int)
-        total       - Required  : total iterations (Int)
-        prefix      - Optional  : prefix string (Str)
-        suffix      - Optional  : suffix string (Str)
-        decimals    - Optional  : positive number of decimals in percent complete (Int)
-        length      - Optional  : character length of bar (Int)
-        fill        - Optional  : bar fill character (Str)
-    """
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    print('\r%s %s %s%% %s' % (prefix, '--', percent, suffix), end="\r")
-    # Print New Line on Complete
-    if iteration == total:
-        print()
-
-
 def strip_comments(source):
     tokens = (
         'PERCENT', 'BEGINCOMMENT', 'ENDCOMMENT',
@@ -211,8 +192,8 @@ MACRO_DICTIONARY = []
 
 def gather_macro(strz):
     """
-        This method searches for defs, newcommands, edef, gdef,xdef, DeclareMathOperators and renewcommand 
-        and gets the macro structure out of it. Number 
+        This method searches for defs, newcommands, edef, gdef,xdef, DeclareMathOperators and renewcommand
+        and gets the macro structure out of it. Number
     """
 
     subs_regexp = []
@@ -220,7 +201,6 @@ def gather_macro(strz):
     should_parse = True
     # parse preamble
     for i, LINE in enumerate(strz.split('\n')):
-        printProgressBar(i + 1, len(strz.split('\n')), suffix="gather Macros")
         if should_parse:
             if re.search(START_PATTERN, LINE):
                 should_parse = False
@@ -250,7 +230,6 @@ def remove_macro(st, o_file):
     should_substitute = False
     final_doc = []
     for i, LINE in enumerate(st.split('\n')):
-        printProgressBar(i + 1, len(st.split('\n')), suffix="remove macros")
         if should_substitute:
             if re.search(END_PATTERN, LINE):
                 final_doc.append(LINE)
@@ -302,10 +281,10 @@ def parse_macro_structure(ln):
 def build_subs_regexp(reg):
     """
         This method creates the replacement text for the macro.
-        TODO: 
+        TODO:
             - extend this to any input macro
             - recursively expand raw_replacements (up to any degree)
-            - build tests            
+            - build tests
     """
     if re.search('declare', reg["command_type"]):
 
@@ -347,17 +326,19 @@ if args.input.endswith('.tex'):
     MACRO_FILE = os.path.join(FOLDER_PATH, "user_macro.sty")
     TEMP_FILE_PRE_EXPANSION = os.path.join(FOLDER_PATH, "temp_pre.tex")
 
-    # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
+    # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
+    print("gather macros from preamble")
     with open(args.input, 'r') as i:
         line = strip_comments(i.read())
         gather_macro(line)
-
-    # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
+    # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
+    print("gather macros from user defined file")
     if os.path.exists(MACRO_FILE):
         with open(MACRO_FILE, 'r') as i:
             line = strip_comments(i.read())
             gather_macro(line)
     # Remove the macros from the main file and writes the output to a temp file.
+    print("remove macros from main file")
     with open(args.input, 'r') as i:
         line = strip_comments(i.read())
         remove_macro(line, TEMP_FILE_PRE_EXPANSION)
@@ -366,22 +347,25 @@ if args.input.endswith('.tex'):
     current_path = os.path.split(TEMP_FILE_PRE_EXPANSION)[0]
 
     # Include all the external files
+    print("include external files in main file")
     final_text_to_expand = strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
     # Remove temp file
     os.remove(TEMP_FILE_PRE_EXPANSION)
 
     # Remove macros from the entire file and put the result to temp file
+    print("remove macros from entire file")
     remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
 
 
     #Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
-
     if args.pdflatex:
+        print("final cleaning file")
         p = subprocess.Popen(
-            ["perl", os.path.join("..","Perl","AxessibilityPreprocesspdfLatex.pl"), "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", "../Perl/AxessibilityPreprocesspdfLatex.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     else:
+        print("final cleaning file and pdf production")
         p = subprocess.Popen(
-            ["perl", os.path.join("..","Perl","AxessibilityPreprocess.pl"), "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", "../Perl/AxessibilityPreprocess.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     # close process.
     p.communicate()
 
