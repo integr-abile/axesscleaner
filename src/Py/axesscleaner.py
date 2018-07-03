@@ -378,10 +378,10 @@ if args.input.endswith('.tex'):
 
     if args.pdflatex:
         p = subprocess.Popen(
-            ["perl", "../Perl/AxessibilityPreprocesspdfLatex.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", os.path.join("..","Perl","AxessibilityPreprocesspdfLatex.pl"), "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     else:
         p = subprocess.Popen(
-            ["perl", "../Perl/AxessibilityPreprocess.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", os.path.join("..","Perl","AxessibilityPreprocess.pl"), "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     # close process.
     p.communicate()
 

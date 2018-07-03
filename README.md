@@ -17,6 +17,7 @@ These instructions will get you a copy of the project up and running on your loc
 In order to use ```axesscleaner.py``` you need
 
 * python  Python 2 >=2.7.9 or Python 3 >=3.4  (https://www.python.org)
+    * For windows user, please select the installer.exe (32 or 64 bit) and select also the PATH installation option.
 * pip (https://pip.pypa.io/en/stable/installing/)
 * For the pdflatex version, you need a working tex distribution.
     * TexLive 
@@ -29,11 +30,11 @@ In order to use ```axesscleaner.py``` you need
 
 Download the folder on your local computer and unzip the content. 
 
-#### Linux/ Mac Osx
+#### Step 1, Open prompt and go to directory 
 
+##### Linux/ Mac Osx
 Open the terminal. 
 Inside the terminal, go to the directory where the folder is stored using 
-
 
 ```cd <address of your folder>```
 
@@ -41,13 +42,22 @@ For example, if your folder **Axesscleaner** is inside **Documents**, you can do
 
 ```cd ~/Documents/Axesscleaner```  
 
-Then run
+##### Windows
 
-```pip upgrade```
+Open the Command Prompt. If you are not familiar, please check [this](https://www.lifewire.com/how-to-open-command-prompt-2618089). 
+Once open, go to the directory where the folder is stored using
+ 
+```cd <address of your folder>```
 
-to update the version of pip. The next command installs all the dependencies
+For example, if your folder **Axesscleaner** is inside **Documents**, you can do 
 
-```pip install -r requirements.txt```
+```cd C:\Users\<User_Name>\Documents``` 
+
+#### Step 2, install dependencies
+
+Once you are in the right folder, install all the dependencies
+
+```python -m pip install -r requirements.txt```
 
 
 Optionally, you can set up a virtualenv and do the same steps inside it (https://docs.python.org/3/library/venv.html).
@@ -56,7 +66,7 @@ Optionally, you can set up a virtualenv and do the same steps inside it (https:/
 
 Now, you are ready tu use our module from the command line. Let's look into the input/output structure.
 
-By executing ```python axesscleaner.py -h``` you get the following output
+By executing ```python src/Py/axesscleaner.py -h``` you get the following output
 
 ```
 optional arguments:
@@ -112,3 +122,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 * Perl scripts inspired by:
 * [Flatex](https://github.com/johnjosephhorton/flatex)
 * [StripComments](https://gist.github.com/amerberg/a273ca1e579ab573b499)
+* Perl scripts inspired by: [this](https://tex.stackexchange.com/questions/118021/how-to-replace-all-by).
