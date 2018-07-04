@@ -356,16 +356,20 @@ if args.input.endswith('.tex'):
     print("remove macros from entire file")
     remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
 
+    #get script folder
+    script_path = os.path.abspath(os.path.join(__file__, os.pardir))
+    preprocess_path =  os.path.join(script_path, "..", "Perl", "AxessibilityPreprocess.pl")
+    preprocess_compile_path =  os.path.join(script_path, "..", "Perl", "AxessibilityPreprocesspdfLatex.pl")
 
     #Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
     if args.pdflatex:
         print("final cleaning file")
         p = subprocess.Popen(
-            ["perl", "../Perl/AxessibilityPreprocesspdfLatex.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", preprocess_compile_path, "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     else:
         print("final cleaning file and pdf production")
         p = subprocess.Popen(
-            ["perl", "../Perl/AxessibilityPreprocess.pl", "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+            ["perl", preprocess_path, "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
     # close process.
     p.communicate()
 
