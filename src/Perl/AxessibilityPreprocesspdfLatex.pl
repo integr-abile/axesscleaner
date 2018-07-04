@@ -81,6 +81,10 @@ my @lines;
 # variable to store comment part of current line to avoid working on it
 my $commentpart;
 
+# variables to store path and the name of the output file
+my $outpath;
+my $outfile;
+
 
 # hash naming environments that contain lines 
 # that should not be substituted
@@ -238,6 +242,16 @@ print @lines if(!$options{s});
 # if -w is active then output to $ARGV[0]
 if($overwrite)
 {
+    if(rindex($ARGV[0],"/")==-1)
+    {
+    	$outpath= "./";
+    }
+    else
+    {
+    	$outpath = substr($ARGV[0], 0, rindex($ARGV[0],"/"));
+    }
+    $outfile = $ARGV[0];
+    
     open(OUTPUTFILE,">",$ARGV[0]);
     print OUTPUTFILE @lines;
     close(OUTPUTFILE);
@@ -246,9 +260,22 @@ if($overwrite)
 # if -o is active then output to $ARGV[1]
 if($outputToFile)
 {
+    if(rindex($ARGV[1],"/")==-1)
+    {
+    	$outpath= "./";
+    }
+    else
+    {
+    	    $outpath = substr($ARGV[1], 0, rindex($ARGV[1],"/"));
+    }
+    $outfile = $ARGV[1];
+    
     open(OUTPUTFILE,">",$ARGV[1]);
     print OUTPUTFILE @lines;
     close(OUTPUTFILE);
 }
+
+# LaTeX it!
+system("pdflatex", "-output-directory=" . $outpath, $outfile);
 
 exit;
