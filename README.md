@@ -57,7 +57,7 @@ For example, if your folder **Axesscleaner** is inside **Documents**, you can do
 
 Once you are in the right folder, install all the dependencies
 
-```python -m pip install -r requirements.txt```
+```python -m pip install -r requirements.txt --user```
 
 
 Optionally, you can set up a virtualenv and do the same steps inside it (https://docs.python.org/3/library/venv.html).
