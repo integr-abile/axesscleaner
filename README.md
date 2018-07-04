@@ -81,13 +81,13 @@ optional arguments:
 Hence, in order to clean a file, execute:
 
 ```
-axesscleaner.py -i <input file>.tex 
+python src/Py/axesscleaner.py -i <input file>.tex 
 
 ```
 It will generate ```<input file>_clean.tex ``` in the same folder as the input file. With the option ```-p```, i.e. 
 
 ```
-axesscleaner.py -i <input file>.tex -p 
+python src/Py/axesscleaner.py -i <input file>.tex -p 
 
 ```
 It will also generate the log files and the ```input file>_clean.pdf```
@@ -95,7 +95,7 @@ It will also generate the log files and the ```input file>_clean.pdf```
 To specify an output, you can execute:
 
 ```
-axesscleaner.py -i <input file>.tex -o <output file>.tex
+python src/Py/axesscleaner.py -i <input file>.tex -o <output file>.tex
 
 ```
 with or without ```-p```.
