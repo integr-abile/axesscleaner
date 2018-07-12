@@ -100,7 +100,7 @@ python src/Py/axesscleaner.py -i <input file>.tex -o <output file>.tex
 ```
 with or without ```-p```.
 
-##Main Contributors
+## Main Contributors
 
 * Dragan Ahmetovic
 * Tiziana Armano
