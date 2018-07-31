@@ -1,10 +1,17 @@
 import unittest
 
-from axesscleaner import parse_macro_structure
+from macro_methods import *
 
 from hashlib import md5
 
 class axesscleanerTest(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
     def test_parse_macro_structure(self):
         text = r"\newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}}"
         dict = {
