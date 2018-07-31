@@ -8,6 +8,7 @@ from flatex import expand_file
 
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
 
+
 parser.add_argument('-i', dest='input',
                     help='Input File (Required). It accepts only .tex files')
 
@@ -19,8 +20,6 @@ parser.add_argument('-p', dest='pdflatex', action='store_const',
                     help='If selected, runs pdflatex at the end')
 
 args = parser.parse_args()
-
-
 
 
 # Usage
@@ -35,12 +34,11 @@ args = parser.parse_args()
 
 # Modification:
 # 1. Preserve "\n" at the end of line comment
-# 2. For \makeatletter \makeatother block, Preserve "%" 
+# 2. For \makeatletter \makeatother block, Preserve "%"
 #    if it is actually a comment, and trim the line
-#    while preserve the "\n" at the end of the line. 
+#    while preserve the "\n" at the end of the line.
 #    That is because remove the % some time will result in
 #    compilation failure.
-
 def strip_comments(source):
     tokens = (
         'PERCENT', 'BEGINCOMMENT', 'ENDCOMMENT',
@@ -192,65 +190,112 @@ MACRO_DICTIONARY = []
 
 def gather_macro(strz):
     """
-        This method searches for defs, newcommands, edef, gdef,xdef, DeclareMathOperators and renewcommand
-        and gets the macro structure out of it. Number
+    :param strz: a text line
+    :return: list of dict
+
+    This method searches for defs, newcommands, edef, gdef,xdef, DeclareMathOperators and renewcommand
+        and gets the (dict) macro structure out of it. Number
     """
 
     subs_regexp = []
-    # You can manually specify the number of replacements by changing the 4th argument
+
+    # By default the macro reads any line
+
     should_parse = True
+
     # parse preamble
-    for i, LINE in enumerate(strz.split('\n')):
+    for ii, LINE in enumerate(strz.split('\n')):
         if should_parse:
             if re.search(START_PATTERN, LINE):
+
+                """ 
+                    if the parser finds the beginning of the document, it stops the parsing. 
+                    No macro allowed inside \begin{document}..\end{document}
+                """
                 should_parse = False
             else:
+                # perform the parsing
                 result = parse_macro_structure(LINE)
-                if result:
-                    # print(result,line)
+
+                # If the dictionary has a macro name and a replacement content, then it performs the result.
+                if result.get('macro_name', None) is not None and result.get('raw_replacement', None) is not None:
                     MACRO_DICTIONARY.append(result)
         else:
             if re.search(END_PATTERN, LINE):
+
+                # If we ended the preamble, we quit the loop. If not, we go on.
                 break
             else:
                 pass
 
 
 def get_expanded_macro():
+    """
+        :param ''
+        :return: list
+
+        It returns a list with all the expanded macros, ready to be subbed. This is done by calling the
+        method:build_subs_regexp
+
+    """
     subs_regexp = []
     for reg in MACRO_DICTIONARY:
-        expanded_regexp = build_subs_regexp(reg)
+        expanded_regexp = enrich_regexp(reg)
         if expanded_regexp:
             subs_regexp.append(expanded_regexp)
     return subs_regexp
 
 
-def remove_macro(st, o_file):
+def remove_macro(st, output_file):
+    """
+        :param st: string, o_file: output file
+        :return: ''
+        It performs the actual removal of the macros by looping through all the lines and applying the recursive expansion
+        between \begin{document}, \end{document}
+
+    """
+    # getting the list of expanded macros
+
     subs_regexp = get_expanded_macro()
+
+    # by default, we set should_sobstitute as false,
+    # we want to perform the substitution only between begin/end document.
+
     should_substitute = False
+
+    # list that will contain the full file (line by line)
+
     final_doc = []
-    for i, LINE in enumerate(st.split('\n')):
+
+    for ii, reading_line in enumerate(st.split('\n')):
+        """
+            If we are inside the document, it first checks if we reached the end,
+            if not, it performs the substitution by also escaping space charachters. 
+            If we are outside, we check if we reached the beginning of it. 
+            When the docs ends, it stops by default. 
+        """
         if should_substitute:
-            if re.search(END_PATTERN, LINE):
-                final_doc.append(LINE)
+            if re.search(END_PATTERN, reading_line):
+                final_doc.append(reading_line)
                 break
             else:
                 # Perform substitutions
                 try:
-                    LINE = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]', '', recursive_expansion(LINE, subs_regexp))
+                    reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]', '', recursive_expansion(reading_line, subs_regexp))
                 except Exception as e:
-                    print(e)
-                    print(LINE)
+                    print(e, reading_line)
                     break
 
         else:
-            if re.search(START_PATTERN, LINE):
+            if re.search(START_PATTERN, reading_line):
                 should_substitute = True
             else:
                 pass
-        if not LINE.isspace():
-            final_doc.append(LINE)
-    with open(o_file, 'w') as o:
+        if not reading_line.isspace():
+            final_doc.append(reading_line)
+
+
+    with open(output_file, 'w') as o:
         for final_line in final_doc:
             if final_line.rstrip():
                 o.write(final_line + '\n')
@@ -259,7 +304,9 @@ def remove_macro(st, o_file):
 def parse_macro_structure(ln):
     """
     :param ln: a text line
-    :return: structure (see below) of the macro inside the line (if any)
+    :return: dict
+
+    It returns a (potentially empty) dictionary with the structure (see below) of the macro inside the line
     """
     regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
     result = re.search(regexp, ln)
@@ -275,51 +322,171 @@ def parse_macro_structure(ln):
         }
         return macro_structure
     else:
-        return None
+        return {}
 
 
-def build_subs_regexp(reg):
+def enrich_regexp(reg):
     """
-        This method creates the replacement text for the macro.
-        TODO:
-            - extend this to any input macro
-            - recursively expand raw_replacements (up to any degree)
-            - build tests
+          :param reg: regexp dict
+          :return: sub: enriched regexp dict.
+
+        This method creates the replacement text for the macro, determines if the input is single or multi,
+        avoids declarations macro.
+
     """
     if re.search('declare', reg["command_type"]):
 
         pass
     else:
+        sub = {'sub': reg["raw_replacement"], 'reg': '\\' + reg["macro_name"], "macro": reg}
         if not reg["number_of_inputs"]:
             # The macro has no inputs
-            return {'sub': reg["raw_replacement"], 'reg': '\\' + reg["macro_name"] + '(?![a-zA-Z])', }
+            sub['multi'] = False
         else:
             # The macro has one or more inputs
-            pass
+            sub['multi'] = True
+        return sub
 
 
-def recursive_expansion(lin, available_regexp):
-    for subs in available_regexp:
-        if not (re.search(subs["reg"], lin)):
+def recursive_expansion(lin, available_macros):
+    """
+
+    :param lin: line of text, string
+    :param available_macros:  regexp, dict
+    :return:lin, a string with the macro subbed.
+
+    The method takes the line,loops on all the available macros recorded and determines if those are present in the line
+    If so, there are two cases. A) The macro has no input B) The macro has one or more inputs. In the first case, the 
+    replacement text is created directly. In the second case, multi_substitution_regexp is called.
+
+    """
+    for subs in available_macros:
+        search = re.search(subs["reg"], lin)
+        if not search:
             continue
         else:
+            if subs["multi"] is True:
+                to_sub = subs["reg"] + '\s*(.*$)'
+                search_full = re.search(to_sub, lin)
+                subs["sub"] = multi_substitution_regexp(subs, search_full.group(1))
+            else:
+                to_sub = subs["reg"] + '(?![a-zA-Z])'
             try:
-                lin = re.sub(subs["reg"], re.sub(r'([\" \' \\\ ])', r'\\\1', subs["sub"]), lin)
+                lin = re.sub(to_sub, re.sub(r'([\" \' \\\ ])', r'\\\1', subs["sub"]), lin)
             except Exception as e:
-                print(e,lin)
-    for subs in available_regexp:
+                print(e, lin)
+    for subs in available_macros:
         if not (not (re.search(subs["reg"], lin))):
-            return recursive_expansion(lin, available_regexp)
+            return recursive_expansion(lin, available_macros)
         else:
             continue
     return lin
+
+
+def multi_substitution_regexp(rexpr, textafter):
+    """    
+    :param rexpr: dict
+    :param textafter: str
+    :return: replacement_text: str
+
+    The method takes the string after the macro's name and tries to parse it. More explanations in the code.
+    1) searches for the open-separator and increase the respective counter (count_open)
+    2) searches for escaped separators and characters and adds them to the temp_string
+    3) as soon as it encounters another open separator, it treats it as a text to be added while increasing count_open
+    4) if it's a regular char, there are two bea
+    5) if it encounters a closing separator, it increases count_close. If count close is equal to count_open, the
+       program closed as many separators as opened. So, it
+    """
+    
+    count_open: int = 0                     # counts the open-separators
+
+    count_close: int = 0                    # counts the open-separators
+
+    input_list: int = []                    # list of parsed arguments
+
+    text_cursor: int = 0                   # int cursor, signals the position in the text.
+
+    temp_text: str = ''                     # Temporary string
+
+    # Loop on every char of textafter.
+    # Exits when the cursor is at the end of the string or the number of inputs is reached.
+
+    while text_cursor < len(textafter) and len(input_list) < int(rexpr["macro"]["number_of_inputs"]):
+        character = textafter[text_cursor]
+
+        # check if the char is an open separator
+        if character == rexpr["macro"]["separator_open"]:
+            # check if the count_open is equal to count close
+            if count_close == count_open:
+                # if so, the separator should not be added as input replacement. we just update the count
+                count_open += 1
+            else:
+                # if not, two cases. Open and close separator are the same
+                if character == rexpr["macro"]["separator_close"]:
+                    # update the close count
+                    count_close += 1
+
+                    # check if the count_open is equal to count close.
+                    # f so, add the temp_text to the input and reset temp_text
+                    if count_close == count_open:
+                        input_list.append(temp_text)
+                        temp_text = ''
+                    else:
+                        # if not, just add it as a character
+                        temp_text += character
+                else:
+                    # the character is an open separator, not a closing one. And  count_open is NOT equal to count close
+                    # Hence, it is part of the input. We add it to the text while updating the count.
+                    count_open += 1
+                    temp_text += character
+        # Character is not an open separator
+        else:
+            # Character is a close separator,we act as above.
+            if character == rexpr["macro"]["separator_close"]:
+                count_close += 1
+                if count_close == count_open:
+                    input_list.append(temp_text)
+                    temp_text = ''
+                else:
+                    temp_text += character
+            # Character is not an open or a close separator
+            else:
+                # Character is an escape
+                if character == "\\":
+                    # We search for the first non-letter
+                    cursor_end = re.search('(?![a-zA-Z])', textafter[text_cursor+1:]).start() or 1
+                    # we add the escape plus either the first character
+                    # or a every char until the first non letter one (excluded).
+                    # Example: \\{a -> \\{, \\alpha+ ->\\alpha
+                    start_pattern = text_cursor
+                    end_pattern = int(start_pattern) + max(cursor_end, 1)+1
+                    pattern = textafter[start_pattern:end_pattern]
+                    # we add it to the input and we move the cursor to the last char we took.
+                    temp_text += pattern
+                    text_cursor = int(end_pattern)-1
+                else:
+                    # With no escape, we just add the char.
+                    temp_text += character
+
+                # count close is equal to count open, we are "outside" the separators
+                if count_close == count_open:
+                    input_list.append(temp_text)
+                    temp_text = ''
+        text_cursor += 1
+    # perform the actual substitution. Each #1,#2,#3,... is subbed with the content of input_list.
+    for j, strings in enumerate(input_list):
+        rexpr['sub'] = re.sub('#' + str(j + 1), re.sub(r'([\" \' \\\ ])', r'\\\1', strings), rexpr['sub'])
+
+    # We finish by adding the part we edited and the rest of the line.
+    replacement_text: str = rexpr['sub']+textafter[text_cursor:]
+    return replacement_text
 
 
 # Begin of actual methods. First check if the input is a LaTex file
 if args.input.endswith('.tex'):
     # Check the number of outputs. If no output is given, create a new one.
     if not args.output:
-        a = args.input;
+        a = args.input
         args.output = a.replace('.tex', '_clean.tex')
     # Assign the macro file address and some temporary files.
     FOLDER_PATH = os.path.abspath(os.path.join(os.path.abspath(args.input), os.pardir))
@@ -331,12 +498,14 @@ if args.input.endswith('.tex'):
     with open(args.input, 'r') as i:
         line = strip_comments(i.read())
         gather_macro(line)
+
     # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
     print("gather macros from user defined file")
     if os.path.exists(MACRO_FILE):
         with open(MACRO_FILE, 'r') as i:
             line = strip_comments(i.read())
             gather_macro(line)
+
     # Remove the macros from the main file and writes the output to a temp file.
     print("remove macros from main file")
     with open(args.input, 'r') as i:
@@ -349,6 +518,7 @@ if args.input.endswith('.tex'):
     # Include all the external files
     print("include external files in main file")
     final_text_to_expand = strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
+
     # Remove temp file
     os.remove(TEMP_FILE_PRE_EXPANSION)
 
@@ -356,12 +526,12 @@ if args.input.endswith('.tex'):
     print("remove macros from entire file")
     remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
 
-    #get script folder
+    # get script folder
     script_path = os.path.abspath(os.path.join(__file__, os.pardir))
-    preprocess_path =  os.path.join(script_path, "..", "Perl", "AxessibilityPreprocess.pl")
-    preprocess_compile_path =  os.path.join(script_path, "..", "Perl", "AxessibilityPreprocesspdfLatex.pl")
+    preprocess_path = os.path.join(script_path, "..", "Perl", "AxessibilityPreprocess.pl")
+    preprocess_compile_path = os.path.join(script_path, "..", "Perl", "AxessibilityPreprocesspdfLatex.pl")
 
-    #Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
+    # Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
     if args.pdflatex:
         print("final cleaning file")
         p = subprocess.Popen(
@@ -370,6 +540,7 @@ if args.input.endswith('.tex'):
         print("final cleaning file and pdf production")
         p = subprocess.Popen(
             ["perl", preprocess_path, "-w", "-o", "-s", TEMP_FILE_PRE_EXPANSION, args.output])
+
     # close process.
     p.communicate()
 
