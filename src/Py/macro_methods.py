@@ -165,8 +165,6 @@ def strip_comments(source):
 START_PATTERN = 'egin{document}'
 END_PATTERN = 'nd{document}'
 
-MACRO_DICTIONARY = []
-
 
 def gather_macro(strz):
     """
@@ -177,9 +175,9 @@ def gather_macro(strz):
         and gets the (dict) macro structure out of it. Number
     """
 
-    subs_regexp = []
-
     # By default the macro reads any line
+
+    MACRO_DICTIONARY = []
 
     should_parse = True
 
@@ -207,9 +205,10 @@ def gather_macro(strz):
                 break
             else:
                 pass
+    return MACRO_DICTIONARY
 
 
-def get_expanded_macro():
+def get_expanded_macro(array):
     """
         :param ''
         :return: list
@@ -219,24 +218,26 @@ def get_expanded_macro():
 
     """
     subs_regexp = []
-    for reg in MACRO_DICTIONARY:
+    for reg in array:
         expanded_regexp = enrich_regexp(reg)
         if expanded_regexp:
             subs_regexp.append(expanded_regexp)
     return subs_regexp
 
 
-def remove_macro(st, output_file):
+def remove_macro(st, output_file, macro_array):
     """
-        :param st: string, o_file: output file
-        :return: ''
-        It performs the actual removal of the macros by looping through all the lines and applying the recursive expansion
-        between \begin{document}, \end{document}
+    :param st: string where macros have to be removed
+    :param output_file: name of output file
+    :param macro_array: array of macros
+    :return: ''
+    It performs the actual removal of the macros by looping through all the lines and applying the recursive expansion
+    between \begin{document}, \end{document}
 
     """
     # getting the list of expanded macros
 
-    subs_regexp = get_expanded_macro()
+    subs_regexp = get_expanded_macro(macro_array)
 
     # by default, we set should_sobstitute as false,
     # we want to perform the substitution only between begin/end document.
@@ -261,7 +262,13 @@ def remove_macro(st, output_file):
             else:
                 # Perform substitutions
                 try:
-                    reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]', '', recursive_expansion(reading_line, subs_regexp))
+                    reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
+                                          '',
+                                          recursive_expansion(
+                                              reading_line,
+                                              subs_regexp
+                                            )
+                                          )
                 except Exception as e:
                     print(e, reading_line)
                     break
@@ -274,11 +281,18 @@ def remove_macro(st, output_file):
         if not reading_line.isspace():
             final_doc.append(reading_line)
 
-
-    with open(output_file, 'w') as o:
+    if output_file is not None:
+        with open(output_file, 'w') as o:
+            for final_line in final_doc:
+                if final_line.rstrip():
+                    o.write(final_line + '\n')
+        return ''
+    else:
+        final_string = ''
         for final_line in final_doc:
             if final_line.rstrip():
-                o.write(final_line + '\n')
+                final_string += final_line + '\n'
+        return final_string
 
 
 def parse_macro_structure(ln):

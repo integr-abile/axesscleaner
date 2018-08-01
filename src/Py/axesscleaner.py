@@ -22,8 +22,10 @@ parser.add_argument('-p', dest='pdflatex', action='store_const',
 args = parser.parse_args()
 
 
+
 def main():
     # Begin of actual methods. First check if the input is a LaTex file
+    MACRO_LIST = []
     if args.input is not None:
         if args.input.endswith('.tex'):
             # Check the number of outputs. If no output is given, create a new one.
@@ -39,20 +41,20 @@ def main():
             print("gather macros from preamble")
             with open(args.input, 'r') as i:
                 line = strip_comments(i.read())
-                gather_macro(line)
+                MACRO_LIST.extend(gather_macro(line))
 
             # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
             print("gather macros from user defined file")
             if os.path.exists(MACRO_FILE):
                 with open(MACRO_FILE, 'r') as i:
                     line = strip_comments(i.read())
-                    gather_macro(line)
+                    MACRO_LIST.extend(gather_macro(line))
 
             # Remove the macros from the main file and writes the output to a temp file.
             print("remove macros from main file")
             with open(args.input, 'r') as i:
                 line = strip_comments(i.read())
-                remove_macro(line, TEMP_FILE_PRE_EXPANSION)
+                remove_macro(line, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
 
             # Get path of temp file.
             current_path = os.path.split(TEMP_FILE_PRE_EXPANSION)[0]
@@ -66,14 +68,16 @@ def main():
 
             # Remove macros from the entire file and put the result to temp file
             print("remove macros from entire file")
-            remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION)
+            remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
 
             # get script folder
             script_path = os.path.abspath(os.path.join(__file__, os.pardir))
             preprocess_path = os.path.join(script_path, "..", "Perl", "AxessibilityPreprocess.pl")
             preprocess_compile_path = os.path.join(script_path, "..", "Perl", "AxessibilityPreprocesspdfLatex.pl")
 
-            # Call perl scripts to clean dollars, underscores. Eventually, it can call also pdflatex, when -p is selected
+
+            # Call perl scripts to clean dollars, underscores.
+            # Eventually, it can call also pdflatex, when -p is selected
             if args.pdflatex:
                 print("final cleaning file")
                 p = subprocess.Popen(
