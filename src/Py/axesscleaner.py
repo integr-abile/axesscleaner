@@ -1,10 +1,10 @@
 import argparse
 import os.path
 import subprocess
-from macro_methods import *
-
-
+from Axesscleaner import Macro
 from flatex import expand_file
+
+axmacro = Macro.Macro()
 
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
 
@@ -40,35 +40,35 @@ def main():
             # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
             print("gather macros from preamble")
             with open(args.input, 'r') as i:
-                line = strip_comments(i.read())
-                MACRO_LIST.extend(gather_macro(line))
+                line = axmacro.strip_comments(i.read())
+                MACRO_LIST.extend(axmacro.gather_macro(line))
 
             # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
             print("gather macros from user defined file")
             if os.path.exists(MACRO_FILE):
                 with open(MACRO_FILE, 'r') as i:
-                    line = strip_comments(i.read())
-                    MACRO_LIST.extend(gather_macro(line))
+                    line = axmacro.strip_comments(i.read())
+                    MACRO_LIST.extend(axmacro.gather_macro(line))
 
             # Remove the macros from the main file and writes the output to a temp file.
             print("remove macros from main file")
             with open(args.input, 'r') as i:
-                line = strip_comments(i.read())
-                remove_macro(line, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
+                line = axmacro.strip_comments(i.read())
+                axmacro.remove_macro(line, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
 
             # Get path of temp file.
             current_path = os.path.split(TEMP_FILE_PRE_EXPANSION)[0]
 
             # Include all the external files
             print("include external files in main file")
-            final_text_to_expand = strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
+            final_text_to_expand = axmacro.strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
 
             # Remove temp file
             os.remove(TEMP_FILE_PRE_EXPANSION)
 
             # Remove macros from the entire file and put the result to temp file
             print("remove macros from entire file")
-            remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
+            axmacro.remove_macro(final_text_to_expand, TEMP_FILE_PRE_EXPANSION, MACRO_LIST)
 
             # get script folder
             script_path = os.path.abspath(os.path.join(__file__, os.pardir))
