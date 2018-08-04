@@ -1,6 +1,8 @@
 import unittest
 
-from macro_methods import *
+from Axesscleaner import Macro
+
+axmacro=Macro.Macro()
 
 
 TEST_STRING = r"""
@@ -53,7 +55,7 @@ class AxessCleanerTest(unittest.TestCase):
 
     def test_strip_comments(self):
         self.assertNotEqual(STRING_NO_COMMENTS,TEST_STRING)
-        self.assertEqual(STRING_NO_COMMENTS.replace(" ", ""), strip_comments(TEST_STRING).replace(" ", ""))
+        self.assertEqual(STRING_NO_COMMENTS.replace(" ", ""), axmacro.strip_comments(TEST_STRING).replace(" ", ""))
 
     def test_parse_macro_structure(self):
         text = r"\newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}}"
@@ -75,8 +77,8 @@ class AxessCleanerTest(unittest.TestCase):
                     'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2'
                }
 
-        self.assertEqual(parse_macro_structure(text), dict_ok)
-        self.assertNotEqual(parse_macro_structure(text), dict_not)
+        self.assertEqual(axmacro.parse_macro_structure(text), dict_ok)
+        self.assertNotEqual(axmacro.parse_macro_structure(text), dict_not)
 
     def test_gather_macro(self):
         array_test = [
@@ -112,7 +114,7 @@ class AxessCleanerTest(unittest.TestCase):
                     'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2}'
                 }
         ]
-        array_from_function = gather_macro(TEST_STRING)
+        array_from_function = axmacro.gather_macro(TEST_STRING)
 
         self.assertEqual(array_from_function[1], array_test[1])
         self.assertEqual(array_from_function[3], array_test[3])
@@ -138,12 +140,12 @@ class AxessCleanerTest(unittest.TestCase):
             'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2'
         }
 
-        self.assertEqual(get_expanded_macro([dict_ok]), [enrich_regexp(dict_ok)])
-        self.assertNotEqual(get_expanded_macro([dict_ok]), [enrich_regexp(dict_not)])
+        self.assertEqual(axmacro.get_expanded_macro([dict_ok]), [axmacro.enrich_regexp(dict_ok)])
+        self.assertNotEqual(axmacro.get_expanded_macro([dict_ok]), [axmacro.enrich_regexp(dict_not)])
 
 
     def test_remove_macro(self):
-        string_new = remove_macro(TEST_STRING, None, gather_macro(TEST_STRING))
+        string_new = axmacro.remove_macro(TEST_STRING, None, axmacro.gather_macro(TEST_STRING))
 
         string_to_be = r"""\documentclass[11pt,reqno]{amsart}                
                 \newcommand{\F}{\mathcal{F}} % trasformata di Fourier
@@ -163,7 +165,6 @@ class AxessCleanerTest(unittest.TestCase):
                 \end{document}
                 """
         self.assertEqual(string_new.strip(), string_to_be.strip())
-
 
     def test_enrich_regexp(self):
 
@@ -188,13 +189,13 @@ class AxessCleanerTest(unittest.TestCase):
                       },
             'multi': True}
 
-        self.assertEqual(dict_ok, enrich_regexp(dict_ok)["macro"])
-        self.assertEqual(enriched_dict_ok, enrich_regexp(dict_ok))
+        self.assertEqual(dict_ok, axmacro.enrich_regexp(dict_ok)["macro"])
+        self.assertEqual(enriched_dict_ok, axmacro.enrich_regexp(dict_ok))
 
     def test_recursive_expansion(self):
-        available_macros = get_expanded_macro(gather_macro(TEST_STRING))
+        available_macros = axmacro.get_expanded_macro(axmacro.gather_macro(TEST_STRING))
 
-        line =  recursive_expansion(r"$$\lim_{x\to\alpha} \gamma=\log_a_r \weird{\frac{1}{\{\LL\}}}{a}\alpha d$$",
+        line = axmacro.recursive_expansion(r"$$\lim_{x\to\alpha} \gamma=\log_a_r \weird{\frac{1}{\{\LL\}}}{a}\alpha d$$",
                                     available_macros
                                     )
         line_to_be = (r"$$\lim_{x\to\alpha} \gamma=\log_a_r \sum_{n\ =\ \frac{1}{\{\mathcal{L}^2\}}}^{a}\ "  
@@ -215,7 +216,7 @@ class AxessCleanerTest(unittest.TestCase):
                       },
             'multi': True}
 
-        string_to_test = multi_substitution_regexp( macro,
+        string_to_test = axmacro.multi_substitution_regexp( macro,
                                                     r"{\frac{1}{\{\LL\}}}{a}\alpha d$$")
         string_to_match = r"\sum_{n = \frac{1}{\{\LL\}}}^{a} \F(\alpha) - 7 +\frac{\frac{1}{\{\LL\}}}{a} d$$"
 

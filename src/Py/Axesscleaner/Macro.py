@@ -2,24 +2,6 @@ import re
 import ply.lex
 
 
-# Usage
-# python stripcomments.py input.tex > output.tex
-# python stripcomments.py input.tex -e encoding > output.tex
-
-# modified from https://gist.github.com/amerberg/a273ca1e579ab573b499
-
-# Usage
-# python stripcomments.py input.tex > output.tex
-# python stripcomments.py input.tex -e encoding > output.tex
-
-# Modification:
-# 1. Preserve "\n" at the end of line comment
-# 2. For \makeatletter \makeatother block, Preserve "%"
-#    if it is actually a comment, and trim the line
-#    while preserve the "\n" at the end of the line.
-#    That is because remove the % some time will result in
-#    compilation failure.
-
 class Macro:
 
     START_PATTERN = 'egin{document}'
@@ -27,6 +9,23 @@ class Macro:
 
     @staticmethod
     def strip_comments(source):
+        # Usage
+        # python stripcomments.py input.tex > output.tex
+        # python stripcomments.py input.tex -e encoding > output.tex
+
+        # modified from https://gist.github.com/amerberg/a273ca1e579ab573b499
+
+        # Usage
+        # python stripcomments.py input.tex > output.tex
+        # python stripcomments.py input.tex -e encoding > output.tex
+
+        # Modification:
+        # 1. Preserve "\n" at the end of line comment
+        # 2. For \makeatletter \makeatother block, Preserve "%"
+        #    if it is actually a comment, and trim the line
+        #    while preserve the "\n" at the end of the line.
+        #    That is because remove the % some time will result in
+        #    compilation failure.
         tokens = (
             'PERCENT', 'BEGINCOMMENT', 'ENDCOMMENT',
             'BACKSLASH', 'CHAR', 'BEGINVERBATIM',
@@ -267,7 +266,7 @@ class Macro:
                     try:
                         reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
                                             '',
-                                            recursive_expansion(
+                                              Macro.recursive_expansion(
                                                 reading_line,
                                                 subs_regexp
                                                 )
@@ -365,7 +364,7 @@ class Macro:
                 if subs["multi"] is True:
                     to_sub = subs["reg"] + '\s*(.*$)'
                     search_full = re.search(to_sub, lin)
-                    subs["sub"] = multi_substitution_regexp(subs, search_full.group(1))
+                    subs["sub"] = Macro.multi_substitution_regexp(subs, search_full.group(1))
                 else:
                     to_sub = subs["reg"] + '(?![a-zA-Z])'
                 try:
@@ -374,7 +373,7 @@ class Macro:
                     print(e, lin)
         for subs in available_macros:
             if not (not (re.search(subs["reg"], lin))):
-                return recursive_expansion(lin, available_macros)
+                return Macro.recursive_expansion(lin, available_macros)
             else:
                 continue
         return lin

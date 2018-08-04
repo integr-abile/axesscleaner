@@ -1,10 +1,10 @@
 import argparse
 import os.path
 import subprocess
-from Axesscleaner import Macro
-from flatex import expand_file
+from Axesscleaner import Macro, flatex
 
 axmacro = Macro.Macro()
+axflatex = flatex.Flatex()
 
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
 
@@ -20,7 +20,6 @@ parser.add_argument('-p', dest='pdflatex', action='store_const',
                     help='If selected, runs pdflatex at the end')
 
 args = parser.parse_args()
-
 
 
 def main():
@@ -61,7 +60,7 @@ def main():
 
             # Include all the external files
             print("include external files in main file")
-            final_text_to_expand = axmacro.strip_comments(''.join(expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
+            final_text_to_expand = axmacro.strip_comments(''.join(axflatex.expand_file(TEMP_FILE_PRE_EXPANSION, current_path, True, False)))
 
             # Remove temp file
             os.remove(TEMP_FILE_PRE_EXPANSION)
