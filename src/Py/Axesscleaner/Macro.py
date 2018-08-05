@@ -4,8 +4,73 @@ import ply.lex
 
 class Macro:
 
-    START_PATTERN = 'egin{document}'
-    END_PATTERN = 'nd{document}'
+    def __init__(self, macro_dict):
+        self.command_type = macro_dict.get("command_type" or "")
+        self.macro_name = macro_dict.get("macro_name" or "")
+        self.separator_open = macro_dict.get("separator_open" or "")
+        self.separator_close = macro_dict.get("separator_close" or "")
+        self.number_of_inputs = macro_dict.get("number_of_inputs" or "")
+        self.raw_replacement = self.enhance_raw_replacement(macro_dict.get("raw_replacement" or ""))
+
+        if not self.number_of_inputs:
+            # The macro has no inputs
+            self.multi = False
+        else:
+            # The macro has one or more inputs
+            self.multi = True
+
+        if self.is_not_empty():
+            self.regexp = self.enrich_macro()
+            self.escape_name = '\\' + self.macro_name
+        else:
+            self.escape_name = None
+            self.regexp = None
+
+    def is_not_empty(self):
+
+        return self.macro_name is not None and self.raw_replacement is not None
+
+    def enrich_macro(self):
+        """
+            This method returns creates the regexp to search on the text to parse the  macro
+
+                """
+        if self.multi is True:
+            # The macro has no inputs
+            rxp = '\\' + self.macro_name + '\s*(.*$)'
+        else:
+            # The macro has one or more inputs
+            rxp = '\\' + self.macro_name + '(?![a-zA-Z])'
+        return rxp
+
+    def enhance_raw_replacement(self, rr):
+
+        if self.command_type == 'DeclareMathOperator':
+            return '\\operatorname{'+rr+'}'
+        else:
+            return rr
+
+    def to_dict(self):
+
+        return {
+            "command_type": self.command_type,
+            "macro_name": self.macro_name,
+            "separator_open": self.separator_open,
+            "separator_close": self.separator_close,
+            "number_of_inputs": self.number_of_inputs,
+            "raw_replacement": self.raw_replacement,
+            "multi": self.multi,
+            "escape_name": self.escape_name,
+            "regexp": self.regexp,
+        }
+
+
+class Methods:
+
+    def __init__(self):
+        self.macro_list = []
+        self.START_PATTERN = 'egin{document}'
+        self.END_PATTERN = 'nd{document}'
 
     @staticmethod
     def strip_comments(source):
@@ -167,8 +232,7 @@ class Macro:
         lexer.input(source)
         return u"".join([tok.value for tok in lexer])
 
-    @staticmethod
-    def gather_macro(strz):
+    def gather_macro(self, strz):
         """
         :param strz: a text line
         :return: list of dict
@@ -177,16 +241,12 @@ class Macro:
             and gets the (dict) macro structure out of it. Number
         """
 
-        # By default the macro reads any line
-
-        MACRO_DICTIONARY = []
-
         should_parse = True
-
+        temp_array = []
         # parse preamble
         for ii, LINE in enumerate(strz.split('\n')):
             if should_parse:
-                if re.search(Macro.START_PATTERN, LINE):
+                if re.search(self.START_PATTERN, LINE):
 
                     """ 
                         if the parser finds the beginning of the document, it stops the parsing. 
@@ -195,39 +255,21 @@ class Macro:
                     should_parse = False
                 else:
                     # perform the parsing
-                    result = Macro.parse_macro_structure(LINE)
+                    macro = self.parse_macro_structure(LINE)
 
                     # If the dictionary has a macro name and a replacement content, then it performs the result.
-                    if result.get('macro_name', None) is not None and result.get('raw_replacement', None) is not None:
-                        MACRO_DICTIONARY.append(result)
+                    if macro.is_not_empty():
+                        temp_array.append(macro)
             else:
-                if re.search(Macro.END_PATTERN, LINE):
+                if re.search(self.END_PATTERN, LINE):
 
                     # If we ended the preamble, we quit the loop. If not, we go on.
                     break
                 else:
                     pass
-        return MACRO_DICTIONARY
+        self.macro_list.extend(temp_array)
 
-    @staticmethod
-    def get_expanded_macro(array):
-        """
-            :param ''
-            :return: list
-
-            It returns a list with all the expanded macros, ready to be subbed. This is done by calling the
-            method:build_subs_regexp
-
-        """
-        subs_regexp = []
-        for reg in array:
-            expanded_regexp = Macro.enrich_regexp(reg)
-            if expanded_regexp:
-                subs_regexp.append(expanded_regexp)
-        return subs_regexp
-
-    @staticmethod
-    def remove_macro(st, output_file, macro_array):
+    def remove_macro(self, st, output_file):
         """
         :param st: string where macros have to be removed
         :param output_file: name of output file
@@ -237,10 +279,6 @@ class Macro:
         between \begin{document}, \end{document}
 
         """
-        # getting the list of expanded macros
-
-        subs_regexp = Macro.get_expanded_macro(macro_array)
-
         # by default, we set should_sobstitute as false,
         # we want to perform the substitution only between begin/end document.
 
@@ -258,17 +296,16 @@ class Macro:
                 When the docs ends, it stops by default. 
             """
             if should_substitute:
-                if re.search(Macro.END_PATTERN, reading_line):
+                if re.search(self.END_PATTERN, reading_line):
                     final_doc.append(reading_line)
                     break
                 else:
                     # Perform substitutions
                     try:
                         reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
-                                            '',
-                                              Macro.recursive_expansion(
-                                                reading_line,
-                                                subs_regexp
+                                              '',
+                                              self.recursive_expansion(
+                                                reading_line
                                                 )
                                             )
                     except Exception as e:
@@ -276,7 +313,7 @@ class Macro:
                         break
 
             else:
-                if re.search(Macro.START_PATTERN, reading_line):
+                if re.search(self.START_PATTERN, reading_line):
                     should_substitute = True
                 else:
                     pass
@@ -308,47 +345,22 @@ class Macro:
         result = re.search(regexp, ln)
         if result:
             regex = r"\\([[:blank:]]|)(?![a-zA-Z])"
-            macro_structure = {
+            macro_structure = Macro({
                 'command_type': result.group(1),
                 'macro_name': result.group(3),
                 'separator_open': result.group(2),
                 'separator_close': result.group(4),
                 'number_of_inputs': result.group(6),
                 'raw_replacement': re.sub(regex, '', result.group(7)),
-            }
+            })
             return macro_structure
         else:
-            return {}
+            return Macro({})
 
-    @staticmethod
-    def enrich_regexp(reg):
-        """
-            :param reg: regexp dict
-            :return: sub: enriched regexp dict.
-
-            This method creates the replacement text for the macro, determines if the input is single or multi,
-            avoids declarations macro.
-
-        """
-        if re.search('declare', reg["command_type"]):
-
-            pass
-        else:
-            sub = {'sub': reg["raw_replacement"], 'reg': '\\' + reg["macro_name"], "macro": reg}
-            if not reg["number_of_inputs"]:
-                # The macro has no inputs
-                sub['multi'] = False
-            else:
-                # The macro has one or more inputs
-                sub['multi'] = True
-            return sub
-
-    @staticmethod
-    def recursive_expansion(lin, available_macros):
+    def recursive_expansion(self, lin):
         """
 
         :param lin: line of text, string
-        :param available_macros:  regexp, dict
         :return:lin, a string with the macro subbed.
 
         The method takes the line,loops on all the available macros recorded and determines if those are present in the line
@@ -356,24 +368,23 @@ class Macro:
         replacement text is created directly. In the second case, multi_substitution_regexp is called.
 
         """
-        for subs in available_macros:
-            search = re.search(subs["reg"], lin)
+        for subs in self.macro_list:
+            search = re.search(subs.escape_name, lin)
             if not search:
                 continue
             else:
-                if subs["multi"] is True:
-                    to_sub = subs["reg"] + '\s*(.*$)'
-                    search_full = re.search(to_sub, lin)
-                    subs["sub"] = Macro.multi_substitution_regexp(subs, search_full.group(1))
+                if subs.multi is True:
+                    search_full = re.search(subs.regexp, lin)
+                    to_sub = self.multi_substitution_regexp(subs, search_full.group(1))
                 else:
-                    to_sub = subs["reg"] + '(?![a-zA-Z])'
+                    to_sub = subs.raw_replacement
                 try:
-                    lin = re.sub(to_sub, re.sub(r'([\" \' \\\ ])', r'\\\1', subs["sub"]), lin)
+                    lin = re.sub(subs.regexp, re.sub(r'([\" \' \\\ ])', r'\\\1', to_sub), lin)
                 except Exception as e:
                     print(e, lin)
-        for subs in available_macros:
-            if not (not (re.search(subs["reg"], lin))):
-                return Macro.recursive_expansion(lin, available_macros)
+        for subs in self.macro_list:
+            if not (not (re.search(subs.escape_name, lin))):
+                return self.recursive_expansion(lin)
             else:
                 continue
         return lin
@@ -407,18 +418,18 @@ class Macro:
         # Loop on every char of textafter.
         # Exits when the cursor is at the end of the string or the number of inputs is reached.
 
-        while text_cursor < len(textafter) and len(input_list) < int(rexpr["macro"]["number_of_inputs"]):
+        while text_cursor < len(textafter) and len(input_list) < int(rexpr.number_of_inputs):
             character = textafter[text_cursor]
 
             # check if the char is an open separator
-            if character == rexpr["macro"]["separator_open"]:
+            if character == rexpr.separator_open:
                 # check if the count_open is equal to count close
                 if count_close == count_open:
                     # if so, the separator should not be added as input replacement. we just update the count
                     count_open += 1
                 else:
                     # if not, two cases. Open and close separator are the same
-                    if character == rexpr["macro"]["separator_close"]:
+                    if character == rexpr.separator_close:
                         # update the close count
                         count_close += 1
 
@@ -438,7 +449,7 @@ class Macro:
             # Character is not an open separator
             else:
                 # Character is a close separator,we act as above.
-                if character == rexpr["macro"]["separator_close"]:
+                if character == rexpr.separator_close:
                     count_close += 1
                     if count_close == count_open:
                         input_list.append(temp_text)
@@ -470,9 +481,12 @@ class Macro:
                         temp_text = ''
             text_cursor += 1
         # perform the actual substitution. Each #1,#2,#3,... is subbed with the content of input_list.
+
+        replacement_text: str = rexpr.raw_replacement
+
         for j, strings in enumerate(input_list):
-            rexpr['sub'] = re.sub('#' + str(j + 1), re.sub(r'([\" \' \\\ ])', r'\\\1', strings), rexpr['sub'])
+            replacement_text = re.sub('#' + str(j + 1), re.sub(r'([\" \' \\\ ])', r'\\\1', strings), replacement_text)
 
         # We finish by adding the part we edited and the rest of the line.
-        replacement_text: str = rexpr['sub']+textafter[text_cursor:]
+        replacement_text += textafter[text_cursor:]
         return replacement_text
