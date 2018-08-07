@@ -37,13 +37,13 @@ class Flatex:
         else:
             return os.path.abspath(relative_ref) + '.tex'
 
-    def expand_file(self,base_file, current_path, include_bbl, noline):
+    def expand_file(self, base_file, current_path, include_bbl, noline):
         """
         Recursively-defined function that takes as input a file and returns it
         with all the inputs replaced with the contents of the referenced file.
         """
         output_lines = []
-        f = open(base_file, "r")
+        f = self.open_encode_safe(base_file)
         for line in f:
             if self.is_input(line):
                 new_base_file = self.combine_path(current_path, self.get_input(line))
@@ -59,10 +59,14 @@ class Flatex:
         f.close()
         return output_lines
 
-    @staticmethod
-    def bbl_file(base_file):
+    def bbl_file(self, base_file):
         """
         Return content of associated .bbl file
         """
         bbl_path = os.path.abspath(os.path.splitext(base_file)[0]) + '.bbl'
-        return open(bbl_path).readlines()
+        return self.open_encode_safe(bbl_path).readlines()
+
+    @staticmethod
+    def open_encode_safe(file):
+
+        return open(file, 'r', encoding="ISO-8859-1")
