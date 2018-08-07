@@ -1,9 +1,10 @@
 import argparse
 import os.path
 import subprocess
-from Axesscleaner import Macro, flatex
+from Axesscleaner import Macro, flatex, Text
 
-macro_methods = Macro.Methods()
+MACRO = Macro.Methods()
+TEXT = Text.Methods()
 input_latex_methods = flatex.Flatex()
 
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
@@ -25,7 +26,16 @@ parser.add_argument('-p',
                     default=False,
                     help='If selected, runs pdflatex at the end')
 
+parser.add_argument('-a',
+                    dest='addPackage',
+                    action='store_const',
+                    const=True,
+                    default=False,
+                    help='If selected, adds axessibility, if not present. If pdflatex is selected, the package is added')
+
+
 args = parser.parse_args()
+args.ospath = os.path.abspath(__file__)
 
 
 def main():
@@ -60,57 +70,60 @@ def main():
             # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
             print("gather macros from preamble")
 
-            with open(args.input, 'r') as i:
-
-                line = macro_methods.strip_comments(i.read())
-                macro_methods.gather_macro(line)
+            with input_latex_methods.open_encode_safe(args.input) as i:
+                line = MACRO.strip_comments(i.read())
+                MACRO.gather_macro(line)
 
             # Reads user-macro file to obtain the user-defined macros. We also remove unwanted comments
             print("gather macros from user defined file")
 
             if os.path.exists(macro_file):
 
-                with open(macro_file, 'r') as i:
+                with input_latex_methods.open_encode_safe(macro_file) as i:
 
-                    line = macro_methods.strip_comments(i.read())
-                    macro_methods.gather_macro(line)
+                    line = MACRO.strip_comments(i.read())
+                    MACRO.gather_macro(line)
 
             # Remove the macros from the main file and writes the output to a temp file.
             print("remove macros from main file")
 
-            with open(args.input, 'r') as i:
+            with input_latex_methods.open_encode_safe(args.input) as i:
 
-                line = macro_methods.strip_comments(i.read())
-                macro_methods.remove_macro(line, temp_file_pre_expansion)
+                line = MACRO.strip_comments(i.read())
+                MACRO.remove_macro(line, temp_file_pre_expansion, False)
 
             # Get path of temp file.
             current_path = os.path.split(temp_file_pre_expansion)[0]
 
             # Include all the external files
             print("include external files in main file")
-            final_text_to_expand = macro_methods.strip_comments(''.join(input_latex_methods.expand_file(temp_file_pre_expansion,
-                                                                                                        current_path,
-                                                                                                        True, False)))
+            final_text_to_expand = MACRO.strip_comments(''.join(
+                input_latex_methods.expand_file(temp_file_pre_expansion,
+                                                current_path,
+                                                False,
+                                                False)
+                )
+            )
 
             # Remove temp file
             os.remove(temp_file_pre_expansion)
 
             # Remove macros from the entire file and put the result to temp file
             print("remove macros from entire file")
-            macro_methods.remove_macro(final_text_to_expand, temp_file_pre_expansion)
+            MACRO.remove_macro(final_text_to_expand,
+                               temp_file_pre_expansion,
+                               args.addPackage or args.pdflatex)
 
             # get script folder
-            script_path = os.path.abspath(os.path.join(__file__, os.pardir))
+            script_path = os.path.abspath(os.path.join(args.ospath, os.pardir))
+            perl_path = os.path.join(os.path.dirname(script_path), 'Perl')
+            print(perl_path)
             pre_process_path = os.path.join(
-                script_path,
-                "..",
-                "Perl",
+                perl_path,
                 "AxessibilityPreprocess.pl"
             )
             pre_process_compile_path = os.path.join(
-                script_path,
-                "..",
-                "Perl",
+                perl_path,
                 "AxessibilityPreprocesspdfLatex.pl"
             )
 
