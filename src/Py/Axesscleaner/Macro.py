@@ -1,5 +1,6 @@
 import re
 import ply.lex
+from Axesscleaner import Text
 
 
 class Macro:
@@ -71,6 +72,8 @@ class Methods:
         self.macro_list = []
         self.START_PATTERN = 'egin{document}'
         self.END_PATTERN = 'nd{document}'
+        self.axessibility_found = False
+        self.text_methods = Text.Methods()
 
     @staticmethod
     def strip_comments(source):
@@ -253,6 +256,7 @@ class Methods:
                         No macro allowed inside \begin{document}..\end{document}
                     """
                     should_parse = False
+                    break
                 else:
                     # perform the parsing
                     macro = self.parse_macro_structure(LINE)
@@ -260,16 +264,16 @@ class Methods:
                     # If the dictionary has a macro name and a replacement content, then it performs the result.
                     if macro.is_not_empty():
                         temp_array.append(macro)
+                    if self.text_methods.find_axessibility(LINE):
+                        print('axessibility package already included')
+                        self.axessibility_found = True
+                    else:
+                        pass
             else:
-                if re.search(self.END_PATTERN, LINE):
-
-                    # If we ended the preamble, we quit the loop. If not, we go on.
-                    break
-                else:
-                    pass
+                pass
         self.macro_list.extend(temp_array)
 
-    def remove_macro(self, st, output_file):
+    def remove_macro(self, st, output_file, add_package):
         """
         :param st: string where macros have to be removed
         :param output_file: name of output file
@@ -277,7 +281,7 @@ class Methods:
         :return: ''
         It performs the actual removal of the macros by looping through all the lines and applying the recursive expansion
         between \begin{document}, \end{document}
-
+        If the axessibility package is not found, it adds it to the text.
         """
         # by default, we set should_sobstitute as false,
         # we want to perform the substitution only between begin/end document.
@@ -315,6 +319,9 @@ class Methods:
             else:
                 if re.search(self.START_PATTERN, reading_line):
                     should_substitute = True
+                    if self.axessibility_found is False and add_package is True:
+                        reading_line = self.text_methods.add_axessibility(reading_line)
+                        self.axessibility_found = True
                 else:
                     pass
             if not reading_line.isspace():

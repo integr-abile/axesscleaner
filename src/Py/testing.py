@@ -1,6 +1,6 @@
 import unittest
 
-from Axesscleaner import Macro
+from Axesscleaner import Macro, Text
 
 
 TEST_STRING = r"""
@@ -44,21 +44,12 @@ STRING_NO_COMMENTS = r"""
                 \end{document}
             """
 
-
-class AxessCleanerTest(unittest.TestCase):
-
+class AxessCleanerMacro(unittest.TestCase):
     def setUp(self):
         pass
 
     def tearDown(self):
         pass
-
-    def test_strip_comments(self):
-
-        axmacro = Macro.Methods()
-
-        self.assertNotEqual(STRING_NO_COMMENTS,TEST_STRING)
-        self.assertEqual(STRING_NO_COMMENTS.replace(" ", ""), axmacro.strip_comments(TEST_STRING).replace(" ", ""))
 
     def test_macro_entity_init(self):
 
@@ -127,38 +118,27 @@ class AxessCleanerTest(unittest.TestCase):
         self.assertEqual(macro.regexp, enriched_dict_ok["regexp"])
         self.assertEqual(macro.escape_name, enriched_dict_ok["escape_name"])
 
-    def test_enrich_regexp(self):
-
-        dict_ok = {
-            'command_type': 'newcommand',
-            'macro_name': '\\weird',
-            'separator_open': '{',
-            'separator_close': '}',
-            'number_of_inputs': '3',
-            'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2}'
-        }
-
-        enriched_dict_ok = {
-            'command_type': 'newcommand',
-            'macro_name': '\\weird',
-            'separator_open': '{',
-            'separator_close': '}',
-            'number_of_inputs': '3',
-            'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2}',
-            'multi': True,
-            'escape_name': '\\\\weird',
-            'regexp': '\\\\weird\\s*(.*$)'
-        }
-
-        macro = Macro.Macro(dict_ok)
-
-        self.assertEqual(enriched_dict_ok, macro.to_dict())
-
     def test_is_not_empty(self):
 
         macro = Macro.Macro({})
 
         self.assertEqual(macro.is_not_empty(), False)
+
+
+class AxessCleanerMacroMethods(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_strip_comments(self):
+
+        axmacro = Macro.Methods()
+
+        self.assertNotEqual(STRING_NO_COMMENTS,TEST_STRING)
+        self.assertEqual(STRING_NO_COMMENTS.replace(" ", ""), axmacro.strip_comments(TEST_STRING).replace(" ", ""))
 
     def test_parse_macro_structure(self):
 
@@ -253,7 +233,8 @@ class AxessCleanerTest(unittest.TestCase):
 
         axmacro.gather_macro(TEST_STRING)
 
-        string_new = axmacro.remove_macro(TEST_STRING, None)
+        string_new = axmacro.remove_macro(TEST_STRING, None, False)
+        string_new_axessibility = axmacro.remove_macro(TEST_STRING, None, True)
 
         string_to_be = r"""\documentclass[11pt,reqno]{amsart}                
                 \newcommand{\F}{\mathcal{F}} % trasformata di Fourier
@@ -273,7 +254,28 @@ class AxessCleanerTest(unittest.TestCase):
                     \noindent
                 \end{document}
                 """
-        self.assertEqual(string_new.strip(), string_to_be.strip())
+        string_to_be_axessibility = r"""\documentclass[11pt,reqno]{amsart}                
+                \newcommand{\F}{\mathcal{F}} % trasformata di Fourier
+                \renewcommand{\L}{\mathcal{L}} % trasformata di Laplace
+                \newcommand{\LL}{\L^2} % trasformata di Laplace                
+                \newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}}
+                \DeclareMathOperator{\im}{Im}
+                \usepackage{axessibility} 
+                \begin{document}
+                    \noindent
+                    Student's surname and name \underline{\hspace{68.5ex}}
+                    \vspace{1.5ex} % tst comment 
+                    \noindent
+                    Student's number \underline{\hspace{80ex}}                    
+                    \vspace{8ex}
+                    This formula is weird:
+                    $$\operatorname{Im} \lim_{x\to\alpha} \gamma=\log_a_r \sum_{n\ =\ \frac{1}{\{\mathcal{L}^2\}}}^{a}\ \mathcal{F}(\alpha)\ -\ 7\ +\frac{\frac{1}{\{\mathcal{L}^2\}}}{a}\ d$$
+                    \noindent                   
+                \end{document}
+                """
+
+        self.assertEqual(string_new.strip().replace(" ", ""), string_to_be.strip().replace(" ", ""))
+        self.assertEqual(string_new_axessibility.strip().replace(" ", ""), string_to_be_axessibility.strip().replace(" ", ""))
 
     def test_recursive_expansion(self):
 
@@ -304,6 +306,43 @@ class AxessCleanerTest(unittest.TestCase):
 
         self.assertEqual(string_to_test, string_to_match)
 
+class AxessCleanerTextMethods(unittest.TestCase):
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
+
+    def test_add_accessibility(self):
+
+        line_no_package = "\\begin{document}"
+
+        line_package = """
+                            \\usepackage{axessibility}
+                            \\begin{document}
+                       """
+
+        text_methods = Text.Methods()
+
+        self.assertEqual(text_methods
+                         .add_axessibility(line_no_package)
+                         .strip()
+                         .replace(" ", "")
+                         ,
+                         line_package
+                         .strip()
+                         .replace(" ", ""))
+
+    def test_find_accessibility(self):
+        line_package = '\\usepackage{axessibility} %axessibility package installed'
+
+        line_no_package = '\\usepackage{amsmath} %math'
+
+        text_methods = Text.Methods()
+
+        self.assertEqual(text_methods.find_axessibility(line_package), True)
+        self.assertEqual(text_methods.find_axessibility(line_no_package), False)
 
 
 if __name__ == '__main__':
