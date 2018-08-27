@@ -325,7 +325,10 @@ class Methods:
                 else:
                     pass
             if not reading_line.isspace():
-                final_doc.append(reading_line)
+                regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
+                result = re.search(regexp, reading_line)
+                if result is None:
+                    final_doc.append(reading_line)
 
         if output_file is not None:
             with open(output_file, 'w') as o:
@@ -348,17 +351,17 @@ class Methods:
 
         It returns a (potentially empty) dictionary with the structure (see below) of the macro inside the line
         """
-        regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
+        regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +)({|#)(.*(?=(\}|\#)))(\#|\}).*$"
         result = re.search(regexp, ln)
         if result:
             regex = r"\\([[:blank:]]|)(?![a-zA-Z])"
             macro_structure = Macro({
                 'command_type': result.group(1),
                 'macro_name': result.group(3),
-                'separator_open': result.group(2),
-                'separator_close': result.group(4),
+                'separator_open': result.group(7),
+                'separator_close': result.group(9),
                 'number_of_inputs': result.group(6),
-                'raw_replacement': re.sub(regex, '', result.group(7)),
+                'raw_replacement': re.sub(regex, '', result.group(8)),
             })
             return macro_structure
         else:
