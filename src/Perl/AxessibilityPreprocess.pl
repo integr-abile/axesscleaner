@@ -227,7 +227,7 @@ while(<MAINFILE>)
     
     # substitute _ with \
     $_  =~  s {_}{\\sb }g unless($nosubs);
-    $_  =~  s : \\(ref|cite|label)( |)(\{)([^\}]+)\} : $&=~ s {\\sb }{_}gr :gsex;
+    $_  =~  s : \\(ref|cite|label|usepackage)( |)(\{)([^\}]+)\} : $&=~ s {\\sb }{_}gr :gsex;
     push(@lines,$_);
 
 }
