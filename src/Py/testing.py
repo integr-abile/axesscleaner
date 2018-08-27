@@ -44,6 +44,7 @@ STRING_NO_COMMENTS = r"""
                 \end{document}
             """
 
+
 class AxessCleanerMacro(unittest.TestCase):
     def setUp(self):
         pass
@@ -237,11 +238,6 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         string_new_axessibility = axmacro.remove_macro(TEST_STRING, None, True)
 
         string_to_be = r"""\documentclass[11pt,reqno]{amsart}                
-                \newcommand{\F}{\mathcal{F}} % trasformata di Fourier
-                \renewcommand{\L}{\mathcal{L}} % trasformata di Laplace
-                \newcommand{\LL}{\L^2} % trasformata di Laplace                
-                \newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}}
-                \DeclareMathOperator{\im}{Im}
                 \begin{document}
                     \noindent
                     Student's surname and name \underline{\hspace{68.5ex}}
@@ -255,11 +251,6 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                 \end{document}
                 """
         string_to_be_axessibility = r"""\documentclass[11pt,reqno]{amsart}                
-                \newcommand{\F}{\mathcal{F}} % trasformata di Fourier
-                \renewcommand{\L}{\mathcal{L}} % trasformata di Laplace
-                \newcommand{\LL}{\L^2} % trasformata di Laplace                
-                \newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}}
-                \DeclareMathOperator{\im}{Im}
                 \usepackage{axessibility} 
                 \begin{document}
                     \noindent
@@ -272,6 +263,62 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                     $$\operatorname{Im} \lim_{x\to\alpha} \gamma=\log_a_r \sum_{n\ =\ \frac{1}{\{\mathcal{L}^2\}}}^{a}\ \mathcal{F}(\alpha)\ -\ 7\ +\frac{\frac{1}{\{\mathcal{L}^2\}}}{a}\ d$$
                     \noindent                   
                 \end{document}
+                """
+
+        self.assertEqual(string_new.strip().replace(" ", ""), string_to_be.strip().replace(" ", ""))
+        self.assertEqual(string_new_axessibility.strip().replace(" ", ""), string_to_be_axessibility.strip().replace(" ", ""))
+
+    def test_remove_multiline_macro(self):
+        axmacro = Macro.Methods()
+        STRING = r"""\documentclass[11pt,reqno]{amsart}
+                    \newcommand\CM[1]{\par\vskip3mm\begin{center}\fbox{\parbox{5in}{#1}}\end{center}\par\vskip3mm}                
+                    \newcommand{\ztc}{\;|\ }
+                    \begin{document}
+                          \CM{
+                            In questa notazione si noti:
+                            \begin{itemize}
+                                \item l'uso della parentesi graffa. La notazione $ \{\ \}  $ \`e una delle numerose 
+                                        notazioni matematiche che hanno pi\`u significati. 
+                                        In seguito vedremo altri usi della medesima notazione.
+                                \item Il simbolo ``$ \ztc $'' si legge ``tale che'' e pu\`o venir sostituito  
+                                 da due punti o anche da una virgola.  Talvolta viene sottinteso.
+                            \end{itemize}
+                          }
+                    \end{document}
+                """
+        axmacro.gather_macro(STRING)
+
+        string_new = axmacro.remove_macro(STRING, None, False)
+        string_new_axessibility = axmacro.remove_macro(STRING, None, True)
+
+        string_to_be = r"""\documentclass[11pt,reqno]{amsart}                      
+                    \begin{document}
+                          \par\vskip3mm\begin{center}\fbox{\parbox{5in}{{
+                            In questa notazione si noti:
+                            \begin{itemize}
+                                \item l'uso della parentesi graffa. La notazione $ \{\ \}  $ \`e una delle numerose 
+                                        notazioni matematiche che hanno pi\`u significati. 
+                                        In seguito vedremo altri usi della medesima notazione.
+                                \item Il simbolo ``$ \;|\ $'' si legge ``tale che'' e pu\`o venir sostituito  
+                                 da due punti o anche da una virgola.  Talvolta viene sottinteso.
+                            \end{itemize}
+                          }}\end{center}\par\vskip3mm}
+                    \end{document}
+                """
+        string_to_be_axessibility = r"""\documentclass[11pt,reqno]{amsart}                      
+                    \begin{document}
+                          \par\vskip3mm\begin{center}\fbox{\parbox{5in}{{
+                            In questa notazione si noti:
+                            \usepackage{axessibility}
+                            \begin{itemize}
+                                \item l'uso della parentesi graffa. La notazione $ \{\ \}  $ \`e una delle numerose 
+                                        notazioni matematiche che hanno pi\`u significati. 
+                                        In seguito vedremo altri usi della medesima notazione.
+                                \item Il simbolo ``$ \;|\ $'' si legge ``tale che'' e pu\`o venir sostituito  
+                                 da due punti o anche da una virgola.  Talvolta viene sottinteso.
+                            \end{itemize}
+                          }}\end{center}\par\vskip3mm}
+                    \end{document}
                 """
 
         self.assertEqual(string_new.strip().replace(" ", ""), string_to_be.strip().replace(" ", ""))
@@ -305,6 +352,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         string_to_match = r"\sum_{n = \frac{1}{\{\LL\}}}^{a} \F(\alpha) - 7 +\frac{\frac{1}{\{\LL\}}}{a} d$$"
 
         self.assertEqual(string_to_test, string_to_match)
+
 
 class AxessCleanerTextMethods(unittest.TestCase):
 
