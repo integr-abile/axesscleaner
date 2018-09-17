@@ -4,9 +4,11 @@ import re
 class Methods:
 
     def __init__(self):
-        self.dl_open = 0
-        self.dd_dls_open = 0
-        self.newEnv =0
+        self.dl_open = [0]
+        self.dd_dls_open = [0]
+        self.newEnv = 0
+        self.line_dl_open = 0
+        self.line_ddl_open = 0
 
     @staticmethod
     def find_axessibility(line):
@@ -121,42 +123,61 @@ class Methods:
             else:
                 raise ValueError('Supported symbols:"$" and "$$"')
 
-    def find_open_dls(self,sym):
+    def find_open_dls(self, sym):
         if sym == '$':
-            return self.dl_open % 2 == 0 and self.newEnv == 0
+            return self.dl_open[self.newEnv] % 2 == 0
         else:
             if sym == '$$':
-                return self.dd_dls_open % 2 == 0 or self.newEnv == 0
+                return self.dd_dls_open[self.newEnv] % 2 == 0
             else:
                 raise ValueError('Supported symbols:"$" and "$$"')
 
     def search_for_environments(self, line):
 
-        regex_plus = r"\\begin({|)(array|tabular|table)(}|).*$"
-        regex_minus = r"\\end({|)(array|tabular|table)(}|).*$"
+        regex_plus = r"\\begin({|)(array|tabular)(}|).*$"
+        regex_minus = r"\\end({|)(array|tabular)(}|).*$"
         if re.findall(regex_minus, line):
+            self.dl_open.pop(self.newEnv)
+            self.dd_dls_open.pop(self.newEnv)
             self.newEnv -= 1
         else:
             if re.findall(regex_plus, line):
+                self.dl_open.append(0)
+                self.dd_dls_open.append(0)
                 self.newEnv += 1
             else:
                 pass
 
+    def remove_sparse_dls(self, line, sym):
+
+        text_cursor: int = 0
+        dollar_count: int = 0
+        while text_cursor < len(line):
+
+        return line
+
     def remove_dls(self, array):
         temp = []
         for line in array:
+            # Remove dollars from text-like environments
             math_no_dls = self.remove_dollars_from_text_env(line)
-            self.dl_open += self.count_symbols_in_string(math_no_dls, '$')
-            self.dd_dls_open += self.count_symbols_in_string(math_no_dls, '$$')
+            # Count the single dollars in the given line
+            self.line_dl_open = self.count_symbols_in_string(math_no_dls, '$')
+            # Count the double dollars in the given line
+            self.line_ddl_open = self.count_symbols_in_string(math_no_dls, '$$')
+            # Search for new environments
             self.search_for_environments(math_no_dls)
+            # Update the overall count
+            self.dl_open[self.newEnv] += self.line_dl_open
+            self.dd_dls_open[self.newEnv] += self.line_ddl_open
             if self.find_open_dls('$'):
                 math_no_dls = self.remove_inline_dls(math_no_dls, '$')
             else:
-                pass
+                math_no_dls = self.remove_sparse_dls(math_no_dls, '$')
 
             if self.find_open_dls('$$'):
                 math_no_dls = self.remove_inline_dls(math_no_dls, '$$')
             else:
-                pass
+                math_no_dls = self.remove_sparse_dls(math_no_dls, '$$')
             temp.append(math_no_dls)
         return temp

@@ -311,11 +311,11 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"
             r"\begin{tabular}{l}"
             "\n"
-            r"$ \displaystyle (+\mathcal{L} )^{\displaystyle +\mathcal{L}}=+\mathcal{L} $"
+            r"\( \displaystyle (+\mathcal{L} )^{\displaystyle +\mathcal{L}}=+\mathcal{L} \)"
             "\n"
             r"\\"
             "\n"
-            r"$\displaystyle    (+\mathcal{L})^{-\mathcal{L}} =0$ "
+            r"\(\displaystyle    (+\mathcal{L})^{-\mathcal{L}} =0\) "
             "\n"
             r"\end{tabular}"
             "\n"
@@ -354,11 +354,11 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"
             r"\begin{tabular}{l}"
             "\n"
-            r"$ \displaystyle (+\mathcal{L} )^{\displaystyle +\mathcal{L}}=+\mathcal{L} $"
+            r"\( \displaystyle (+\mathcal{L} )^{\displaystyle +\mathcal{L}}=+\mathcal{L} \)"
             "\n"
             r"\\"
             "\n"
-            r"$\displaystyle    (+\mathcal{L})^{-\mathcal{L}} =0$ "
+            r"\(\displaystyle    (+\mathcal{L})^{-\mathcal{L}} =0\) "
             "\n"
             r"\end{tabular}"
             "\n"
@@ -705,9 +705,9 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         \cline{2-3} &&\\
                         & $\displaystyle 0^{\displaystyle 0} $ \qquad $\displaystyle (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$ \\
                         &&\\
-                        \hline\hline\hline 
+                        \hline\hline\hline
                     \end{tabular}
-                    }           
+                    }
                 \end{center}
             \end{table}
         \end{center}
@@ -723,7 +723,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                     \hskip -7cm\parbox{3in}{ 
                     \begin{tabular}
                         [h]{||| c|| c| c |||} \hline\hline\hline &&\\
-                        Regole & $ +\infty +\infty =+\infty $& $ -\infty -\infty =-\infty $\\
+                        Regole & \( +\infty +\infty =+\infty \)& \( -\infty -\infty =-\infty \)\\
                         &&\\
                         \cline{2-3} &&\\
                         & $
@@ -735,18 +735,18 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         && \\
                         &&\\
                         \cline{2-3} &&\\
-                        & $\displaystyle \left | \frac{\displaystyle \pm\infty}{\displaystyle 0}\right |=+\infty $ & $\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\infty}=0 $ \\
+                        & \(\displaystyle \left | \frac{\displaystyle \pm\infty}{\displaystyle 0}\right |=+\infty \) & \(\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\infty}=0 \) \\
                         &&\\
                         \cline{2-3} &&\\
                         & $ 
                         \begin{tabular}
-                            {c} $l+(+\infty)=l+\infty=+\infty$\\
-                            $l+(-\infty)=l-\infty=-\infty$ 
+                            {c} \(l+(+\infty)=l+\infty=+\infty\)\\
+                            \(l+(-\infty)=l-\infty=-\infty\) 
                         \end{tabular}
                         $ & $ l(+\infty)=\left\{ 
                         \begin{tabular}
-                            {cl} $ +\infty $&\mbox{se \(l>0\)}\\
-                            $ -\infty$ &\mbox{se \(l<0\)} 
+                            {cl} \( +\infty \)&\mbox{se \(l>0\)}\\
+                            \( -\infty\) &\mbox{se \(l<0\)} 
                         \end{tabular}
                         \right. $ \\
                         
@@ -755,17 +755,17 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         & & \\
                         & 
                         \begin{tabular}
-                            {l} $ \displaystyle 0 ^{\displaystyle +\infty}=0 $ \\
-                            $ 0^{-\infty}=+\infty $ 
+                            {l} \( \displaystyle 0 ^{\displaystyle +\infty}=0 \) \\
+                            \( 0^{-\infty}=+\infty \) 
                         \end{tabular}
                         & $ 
                         \begin{tabular}
-                            {l} $ \displaystyle (+\infty )^{\displaystyle +\infty}=+\infty $ \\
-                            $\displaystyle (+\infty)^{-\infty} =0$ 
+                            {l} \( \displaystyle (+\infty )^{\displaystyle +\infty}=+\infty \) \\
+                            \(\displaystyle (+\infty)^{-\infty} =0\) 
                         \end{tabular}
                         $ \\
                         
-                        && \\                   
+                        && \\
                         \hline\hline &&\\
                         $
                         \begin{array}{l}
@@ -775,19 +775,18 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         $ & $ +\infty - \infty $ & $ 0\cdot(\pm\infty) $ \\
                         &&\\
                         \cline{2-3} &&\\
-                        & $\displaystyle \frac{\displaystyle \pm\infty}{\displaystyle \pm\infty} $ & $\displaystyle \frac{\displaystyle 0}{\displaystyle 0} $ \\
+                        & \(\displaystyle \frac{\displaystyle \pm\infty}{\displaystyle \pm\infty} \) & \(\displaystyle \frac{\displaystyle 0}{\displaystyle 0} \) \\
                         &&\\
                         \cline{2-3} &&\\
-                        & $\displaystyle 0^{\displaystyle 0} $ \qquad $\displaystyle (+\infty)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\infty}$ \\
-                        &&\\                        
+                        & \(\displaystyle 0^{\displaystyle 0} \) \qquad \(\displaystyle (+\infty)^{\displaystyle 0} \) & \(\displaystyle 1^{\displaystyle \pm\infty}\) \\
+                        &&\\
                         \hline\hline\hline
                     \end{tabular}
                     }
                 \end{center}
             \end{table}
         \end{center}
-        \end{document}
-        """
+        \end{document}"""
 
         axmacro = Macro.Methods()
 
@@ -795,7 +794,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 
         string_parsed = axmacro.remove_macro(string_to_parse, None, False);
 
-        self.assertEqual(string_parsed, string_to_be)
+        self.assertEqual(string_to_be, string_parsed)
         print(string_parsed)
 
 
