@@ -69,4 +69,4 @@ class Flatex:
     @staticmethod
     def open_encode_safe(file):
 
-        return open(file, 'r', encoding="ISO-8859-1")
+        return open(file, 'r')

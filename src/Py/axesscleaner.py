@@ -88,8 +88,7 @@ def main():
             print("remove macros from main file")
 
             with input_latex_methods.open_encode_safe(args.input) as i:
-
-                line = MACRO.strip_comments(i.read())
+                line = i.read()
                 MACRO.remove_macro(line, temp_file_pre_expansion, False)
 
             # Get path of temp file.

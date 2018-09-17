@@ -12,7 +12,6 @@ class Macro:
         self.separator_close = macro_dict.get("separator_close" or "")
         self.number_of_inputs = macro_dict.get("number_of_inputs" or "")
         self.raw_replacement = self.enhance_raw_replacement(macro_dict.get("raw_replacement" or ""))
-
         if not self.number_of_inputs:
             # The macro has no inputs
             self.multi = False
@@ -273,9 +272,9 @@ class Methods:
                 pass
         self.macro_list.extend(temp_array)
 
-    def remove_macro(self, st, output_file, add_package):
+    def remove_macro(self, stz, output_file, add_package):
         """
-        :param st: string where macros have to be removed
+        :param stz: string where macros have to be removed
         :param output_file: name of output file
         :param macro_array: array of macros
         :return: ''
@@ -290,32 +289,29 @@ class Methods:
 
         # list that will contain the full file (line by line)
 
+        line = self.strip_comments(stz)
+        st = line.split('\n')
         final_doc = []
-
-        for ii, reading_line in enumerate(st.split('\n')):
+        list_to_parse = []
+        end_of_doc = []
+        for ii, reading_line in enumerate(st):
             """
                 If we are inside the document, it first checks if we reached the end,
-                if not, it performs the substitution by also escaping space charachters. 
+                if not, we separate the file in 3 parts: preamble, end, and part where the substitutions have to be performed.
+                We also escape space charachters. 
                 If we are outside, we check if we reached the beginning of it. 
                 When the docs ends, it stops by default. 
             """
+
             if should_substitute:
                 if re.search(self.END_PATTERN, reading_line):
-                    final_doc.append(reading_line)
+                    end_of_doc.append(reading_line)
                     break
                 else:
-                    # Perform substitutions
-                    try:
-                        reading_line = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
-                                              '',
-                                              self.recursive_expansion(
-                                                reading_line
-                                                )
-                                            )
-                    except Exception as e:
-                        print(e, reading_line)
-                        break
-
+                    # Put all the lines to sub in one list
+                    list_to_parse.append(
+                        reading_line
+                    )
             else:
                 if re.search(self.START_PATTERN, reading_line):
                     should_substitute = True
@@ -324,24 +320,79 @@ class Methods:
                         self.axessibility_found = True
                 else:
                     pass
-            if not reading_line.isspace():
+
                 regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
                 result = re.search(regexp, reading_line)
                 if result is None:
                     final_doc.append(reading_line)
 
+        # perform the actual substitution (only on macros on one line)
+
+        parsed_list_inline = list(map(lambda item: self.do_inline_sub(item), list_to_parse))
+        parsed_list = self.remove_multiline_macros(parsed_list_inline)
+        parsed_list = self.text_methods.remove_dls(parsed_list)
+
+        final_doc.extend(parsed_list)
+
+        final_doc.extend(end_of_doc)
+
         if output_file is not None:
             with open(output_file, 'w') as o:
-                for final_line in final_doc:
-                    if final_line.rstrip():
+                for jj, final_line in enumerate(final_doc):
+                    if jj < len(final_doc)-1:
                         o.write(final_line + '\n')
+                    else:
+                        o.write(final_line)
+
             return ''
         else:
             final_string = ''
-            for final_line in final_doc:
-                if final_line.rstrip():
+            for jj, final_line in enumerate(final_doc):
+                if jj < len(final_doc)-1:
                     final_string += final_line + '\n'
+                else:
+                    final_string += final_line
             return final_string
+
+    def do_inline_sub(self, ln):
+        try:
+            return re.sub(
+                            r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
+                            '',
+                            self.recursive_expansion(ln))
+        except Exception as e:
+            print(e)
+
+    def remove_multiline_macros(self, array):
+        temp = []
+        is_parsing = False
+        line = None
+        for yy, lines in enumerate(array):
+            if r'\@@$$@@!!' in lines:
+                is_parsing = True
+                if line is None:
+                    line = lines
+                else:
+                    line += lines
+            else:
+                if is_parsing is True:
+                    if line is None:
+                        line = lines
+                    else:
+                        line += lines
+                else:
+                    temp.append(lines)
+            if line is None:
+                pass
+            else:
+                temp_line = self.recursive_expansion(line.replace('@@$$@@!!', ''))
+                if r'\@@$$@@!!' in temp_line:
+                    line += '@@newl@@'
+                else:
+                    temp_line = re.sub(r"(?<!\\)\\ ", ' ', temp_line)
+                    temp.extend(temp_line.replace('\|', '|').split('@@newl@@'))
+                    line = None
+        return temp
 
     @staticmethod
     def parse_macro_structure(ln):
@@ -354,7 +405,7 @@ class Methods:
         regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +)({|#)(.*(?=(\}|\#)))(\#|\}).*$"
         result = re.search(regexp, ln)
         if result:
-            regex = r"\\([[:blank:]]|)(?![a-zA-Z])"
+            regex = r"\\([[:blank:]]|)(?![a-zA-Z\s\;\.\,\"\'])"
             macro_structure = Macro({
                 'command_type': result.group(1),
                 'macro_name': result.group(3),
@@ -389,9 +440,9 @@ class Methods:
                 else:
                     to_sub = subs.raw_replacement
                 try:
-                    lin = re.sub(subs.regexp, re.sub(r'([\" \' \\\ ])', r'\\\1', to_sub), lin)
+                    lin = re.sub(subs.regexp, re.sub(r'([\\|\"])', r'\\\1', to_sub), lin)
                 except Exception as e:
-                    print(e, lin)
+                    print('ERROR'+e, lin)
         for subs in self.macro_list:
             if not (not (re.search(subs.escape_name, lin))):
                 return self.recursive_expansion(lin)
@@ -414,12 +465,11 @@ class Methods:
         5) if it encounters a closing separator, it increases count_close. If count close is equal to count_open, the
         program closed as many separators as opened. So, it
         """
-
         count_open: int = 0                     # counts the open-separators
 
         count_close: int = 0                    # counts the open-separators
 
-        input_list: int = []                    # list of parsed arguments
+        input_list = []                    # list of parsed arguments
 
         text_cursor: int = 0                   # int cursor, signals the position in the text.
 
@@ -427,7 +477,6 @@ class Methods:
 
         # Loop on every char of textafter.
         # Exits when the cursor is at the end of the string or the number of inputs is reached.
-
         while text_cursor < len(textafter) and len(input_list) < int(rexpr.number_of_inputs):
             character = textafter[text_cursor]
 
@@ -490,13 +539,23 @@ class Methods:
                         input_list.append(temp_text)
                         temp_text = ''
             text_cursor += 1
+
+        # clean the list
+
+        clean_input_list = map(lambda strz: re.sub(r'([\"|\'|\||\\])', r'\\\1', strz), input_list)
         # perform the actual substitution. Each #1,#2,#3,... is subbed with the content of input_list.
+        if count_close==count_open and len(input_list) == int(rexpr.number_of_inputs):
+            replacement_text: str = rexpr.raw_replacement
 
-        replacement_text: str = rexpr.raw_replacement
+            for j, strings in enumerate(clean_input_list):
+                replacement_text = re.sub('#' + str(j + 1), strings, replacement_text)
+            # We finish by adding the part we edited and the rest of the line and a cleanup of unwanted characters
+            replacement_text += textafter[text_cursor:]
 
-        for j, strings in enumerate(input_list):
-            replacement_text = re.sub('#' + str(j + 1), re.sub(r'([\" \' \\\ ])', r'\\\1', strings), replacement_text)
-
-        # We finish by adding the part we edited and the rest of the line.
-        replacement_text += textafter[text_cursor:]
-        return replacement_text
+            # You can manually specify the number of replacements by changing the 4th argument
+            replacement_text = re.sub(r"(\\\\)(?![A-Za-z\x00\s+]|$|'[a-zA-Z]|@@newl@@)", r"", replacement_text)
+            replacement_text = re.sub(r"\\'", r"'", replacement_text)
+            replacement_text = re.sub(r"\'(?![A-Za-z])", "'", replacement_text)
+            return replacement_text
+        else:
+            return rexpr.macro_name.replace('\\', '\\@@$$@@!!')+textafter
