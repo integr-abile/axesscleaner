@@ -307,7 +307,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"            
             r"\begin{document}"
             "\n"
-            r"$"
+            r"\("
             "\n"
             r"\begin{tabular}{l}"
             "\n"
@@ -319,7 +319,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"
             r"\end{tabular}"
             "\n"
-            r"$"
+            r"\)"
             "\n"
             r"\noindent"
             "\n"
@@ -350,7 +350,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"
             r"\begin{document}"
             "\n"
-            r"$"
+            r"\("
             "\n"
             r"\begin{tabular}{l}"
             "\n"
@@ -362,7 +362,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             "\n"
             r"\end{tabular}"
             "\n"
-            r"$"
+            r"\)"
             "\n"
             r"\noindent"
             "\n"
@@ -491,11 +491,11 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                   "\n"
                   r"{\rm ordine minore} del successivo: }"
                   "\n"
-                  r"$$"
+                  r"\["
                   "\n"
                   r"\{\log n\}\,,\quad \{n^b\}\,,\quad \{a^n\} \,,\quad (\{n!\} \,,\quad \{n^n\}"
                   "\n" 
-                  r"$$"
+                  r"\]"
                   "\n"
                   r"\medskip"
                   "\n"
@@ -505,7 +505,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                   "\n"
                   r"\medskip"
                   "\n"
-                  r"$$"
+                  r"\["
                   "\n"
                   r"\left\{\begin{array}"
                   "\n"
@@ -527,7 +527,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                   "\n"
                   r"\end{array} \right." 
                   "\n"
-                  r"$$"
+                  r"\]"
                   "\n"
                   r"}"
                   "\n"
@@ -544,11 +544,11 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                    "\n"
                    r"{\rm ordine minore} del successivo: }"
                    "\n"
-                   r"$$"
+                   r"\["
                    "\n"
                    r"\{\log n\}\,,\quad \{n^b\}\,,\quad \{a^n\} \,,\quad (\{n!\} \,,\quad \{n^n\}"
                    "\n"
-                   r"$$"
+                   r"\]"
                    "\n"
                    r"\medskip"
                    "\n"
@@ -558,7 +558,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                    "\n"
                    r"\medskip"
                    "\n"
-                   r"$$"
+                   r"\["
                    "\n"
                    r"\left\{\begin{array}"
                    "\n"
@@ -580,7 +580,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                    "\n"
                    r"\end{array} \right."
                    "\n"
-                   r"$$"
+                   r"\]"
                    "\n"
                    r"}}\end{center}\par\vskip3mm"  
                    "\n"  
@@ -652,11 +652,8 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         &&\\
                         \cline{2-3} &&\\
                         & $
-                        \begin{array}{l}
-                            (+\ZIN)(+\ZIN)=+\ZIN\\
-                            (-\ZIN)(-\ZIN)=+\ZIN
-                        \end{array}
-                        $& $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$ \\
+                        \begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN\\
+                        (-\ZIN)(-\ZIN)=+\ZIN\end{array}$& $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$ \\
                         && \\
                         &&\\
                         \cline{2-3} &&\\
@@ -726,29 +723,26 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                         Regole & \( +\infty +\infty =+\infty \)& \( -\infty -\infty =-\infty \)\\
                         &&\\
                         \cline{2-3} &&\\
-                        & $
-                        \begin{array}{l}
-                            (+\infty)(+\infty)=+\infty\\
-                            (-\infty)(-\infty)=+\infty
-                        \end{array}
-                        $& $(-\infty)(+\infty)=-\infty=(+\infty)(-\infty)$ \\
+                        & \(
+                        \begin{array}{l}(+\infty)(+\infty)=+\infty\\
+                        (-\infty)(-\infty)=+\infty\end{array}\)& \((-\infty)(+\infty)=-\infty=(+\infty)(-\infty)\) \\
                         && \\
                         &&\\
                         \cline{2-3} &&\\
                         & \(\displaystyle \left | \frac{\displaystyle \pm\infty}{\displaystyle 0}\right |=+\infty \) & \(\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\infty}=0 \) \\
                         &&\\
                         \cline{2-3} &&\\
-                        & $ 
+                        & \( 
                         \begin{tabular}
                             {c} \(l+(+\infty)=l+\infty=+\infty\)\\
                             \(l+(-\infty)=l-\infty=-\infty\) 
                         \end{tabular}
-                        $ & $ l(+\infty)=\left\{ 
+                        \) & \( l(+\infty)=\left\{ 
                         \begin{tabular}
                             {cl} \( +\infty \)&\mbox{se \(l>0\)}\\
                             \( -\infty\) &\mbox{se \(l<0\)} 
                         \end{tabular}
-                        \right. $ \\
+                        \right. \) \\
                         
                         \cline{2-3} &&\\
                         
@@ -758,21 +752,21 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                             {l} \( \displaystyle 0 ^{\displaystyle +\infty}=0 \) \\
                             \( 0^{-\infty}=+\infty \) 
                         \end{tabular}
-                        & $ 
+                        & \( 
                         \begin{tabular}
                             {l} \( \displaystyle (+\infty )^{\displaystyle +\infty}=+\infty \) \\
                             \(\displaystyle (+\infty)^{-\infty} =0\) 
                         \end{tabular}
-                        $ \\
+                        \) \\
                         
                         && \\
                         \hline\hline &&\\
-                        $
+                        \(
                         \begin{array}{l}
                             {\rm Forme} \\
                             {\rm indeterminate} 
                         \end{array}
-                        $ & $ +\infty - \infty $ & $ 0\cdot(\pm\infty) $ \\
+                        \) & \( +\infty - \infty \) & \( 0\cdot(\pm\infty) \) \\
                         &&\\
                         \cline{2-3} &&\\
                         & \(\displaystyle \frac{\displaystyle \pm\infty}{\displaystyle \pm\infty} \) & \(\displaystyle \frac{\displaystyle 0}{\displaystyle 0} \) \\
@@ -883,6 +877,12 @@ class AxessCleanerTextMethods(unittest.TestCase):
         self.assertEqual(6, Text.Methods().count_symbols_in_string(string,'$'))
         self.assertEqual(2, Text.Methods().count_symbols_in_string(string_dd, '$$'))
         self.assertEqual(0, Text.Methods().count_symbols_in_string(string, '$$'))
+
+    def test_remove_sparse_dl(self):
+        string = r"$& $(-\infty)(+\infty)=-\infty=(+\infty)(-\infty)$ \\"
+        string_clean = r"\)& \((-\infty)(+\infty)=-\infty=(+\infty)(-\infty)\) \\"
+        Text.Methods().dl_open = 1
+        self.assertEqual(string_clean, Text.Methods().remove_sparse_dl(string))
 
 
 if __name__ == '__main__':

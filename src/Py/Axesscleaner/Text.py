@@ -125,10 +125,16 @@ class Methods:
 
     def find_open_dls(self, sym):
         if sym == '$':
-            return self.dl_open[self.newEnv] % 2 == 0
+            if self.dl_open[self.newEnv] % 2 == 0 and self.dl_open[self.newEnv] > 0:
+                return True
+            else:
+                return False
         else:
             if sym == '$$':
-                return self.dd_dls_open[self.newEnv] % 2 == 0
+                if self.dd_dls_open[self.newEnv] % 2 == 0 and self.dd_dls_open[self.newEnv] > 0:
+                    return True
+                else:
+                    return False
             else:
                 raise ValueError('Supported symbols:"$" and "$$"')
 
@@ -141,24 +147,59 @@ class Methods:
             self.dd_dls_open.pop(self.newEnv)
             self.newEnv -= 1
         else:
-            if re.findall(regex_plus, line):
-                self.dl_open.append(0)
-                self.dd_dls_open.append(0)
-                self.newEnv += 1
-            else:
-                pass
+            pass
 
-    def remove_sparse_dls(self, line, sym):
+        if re.findall(regex_plus, line):
+            self.dl_open.append(0)
+            self.dd_dls_open.append(0)
+            self.newEnv += 1
+        else:
+            pass
+
+    def remove_sparse_dl(self, line):
 
         text_cursor: int = 0
-        dollar_count: int = 0
-        while text_cursor < len(line):
+        sym_count: int = self.count_symbols_in_string(line, '$')
+        sym_overall: int = self.dl_open[self.newEnv] - sym_count
+        sym_progress: int = 0
+        temp: str = ""
+        while text_cursor < len(line) and sym_count>sym_progress:
+            if line[text_cursor] == '$':
+                if (sym_overall+sym_progress) % 2 == 0:
+                    temp += '\('
+                else:
+                    temp += '\)'
+                sym_progress += 1
+            else:
+                temp += line[text_cursor]
+            text_cursor += 1
+        temp += line[text_cursor:]
+        return temp
 
-        return line
+    def remove_sparse_ddl(self, line):
+
+        text_cursor: int = 0
+        sym_count: int = self.count_symbols_in_string(line, '$$')
+        sym_overall: int = self.dd_dls_open[self.newEnv] - sym_count
+        sym_progress: int = 0
+        temp = ""
+        while text_cursor < len(line)-1 and sym_count>sym_progress:
+            if line[text_cursor] == '$' and line[(text_cursor+1)] == '$':
+                sym_count -= 1
+                if (sym_overall + sym_progress) % 2 == 0:
+                    temp += '\['
+                else:
+                    temp += '\]'
+                text_cursor += 2
+            else:
+                temp += line[text_cursor]
+                text_cursor += 1
+        temp += line[text_cursor:]
+        return temp
 
     def remove_dls(self, array):
         temp = []
-        for line in array:
+        for jj,line in enumerate(array):
             # Remove dollars from text-like environments
             math_no_dls = self.remove_dollars_from_text_env(line)
             # Count the single dollars in the given line
@@ -168,16 +209,20 @@ class Methods:
             # Search for new environments
             self.search_for_environments(math_no_dls)
             # Update the overall count
+            if jj >5000and jj < 6000:
+                print(line, self.dl_open, self.dd_dls_open, self.newEnv)
             self.dl_open[self.newEnv] += self.line_dl_open
             self.dd_dls_open[self.newEnv] += self.line_ddl_open
-            if self.find_open_dls('$'):
-                math_no_dls = self.remove_inline_dls(math_no_dls, '$')
-            else:
-                math_no_dls = self.remove_sparse_dls(math_no_dls, '$')
-
-            if self.find_open_dls('$$'):
+            if self.find_open_dls('$$') and self.line_ddl_open % 2 == 0:
                 math_no_dls = self.remove_inline_dls(math_no_dls, '$$')
             else:
-                math_no_dls = self.remove_sparse_dls(math_no_dls, '$$')
+                math_no_dls = self.remove_sparse_ddl(math_no_dls)
+            if self.find_open_dls('$') and self.line_dl_open % 2 == 0:
+                math_no_dls = self.remove_inline_dls(math_no_dls, '$')
+            else:
+                math_no_dls = self.remove_sparse_dl(math_no_dls)
+
+
+
             temp.append(math_no_dls)
         return temp
