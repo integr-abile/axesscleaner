@@ -1,10 +1,10 @@
 import argparse
 import os.path
-import subprocess
 from Axesscleaner import Macro, flatex, Text
 
 MACRO = Macro.Methods()
 TEXT = Text.Methods()
+PERL = Text.PerlLauncher(os.path.abspath(__file__))
 input_latex_methods = flatex.Flatex()
 
 parser = argparse.ArgumentParser(description='This method takes as inputs ')
@@ -35,7 +35,7 @@ parser.add_argument('-a',
 
 
 args = parser.parse_args()
-args.ospath = os.path.abspath(__file__)
+
 
 
 def main():
@@ -45,7 +45,6 @@ def main():
     if args.input is not None:
 
         if args.input.endswith('.tex'):
-
             # Check the number of outputs. If no output is given, create a new one.
 
             if not args.output:
@@ -66,6 +65,10 @@ def main():
                 folder_path,
                 "temp_pre.tex"
             )
+            beautified_file  = os.path.join(
+                folder_path,
+                "beautify.tex"
+            )
 
             # Reads the file preamble to obtain the user-defined macros. We also remove unwanted comments.
             print("gather macros from preamble")
@@ -83,10 +86,8 @@ def main():
 
                     line = MACRO.strip_comments(i.read())
                     MACRO.gather_macro(line)
-
             # Remove the macros from the main file and writes the output to a temp file.
             print("remove macros from main file")
-
             with input_latex_methods.open_encode_safe(args.input) as i:
                 line = i.read()
                 MACRO.remove_macro(line, temp_file_pre_expansion, False)
@@ -106,61 +107,22 @@ def main():
 
             # Remove temp file
             os.remove(temp_file_pre_expansion)
-
+            # beautify file
+            PERL.beautifier(final_text_to_expand, beautified_file)
             # Remove macros from the entire file and put the result to temp file
             print("remove macros from entire file")
-            MACRO.remove_macro(final_text_to_expand,
-                               temp_file_pre_expansion,
-                               args.addPackage or args.pdflatex)
+            with input_latex_methods.open_encode_safe(beautified_file) as i:
+                line = i.read()
+                MACRO.remove_macro(line,
+                                   temp_file_pre_expansion,
+                                   args.addPackage or args.pdflatex)
 
+            os.remove(beautified_file)
             # get script folder
-            script_path = os.path.abspath(os.path.join(args.ospath, os.pardir))
-            perl_path = os.path.join(os.path.dirname(script_path), 'Perl')
-            print(perl_path)
-            pre_process_path = os.path.join(
-                perl_path,
-                "AxessibilityPreprocess.pl"
-            )
-            pre_process_compile_path = os.path.join(
-                perl_path,
-                "AxessibilityPreprocesspdfLatex.pl"
-            )
-
-            # Call perl scripts to clean dollars, underscores.
-            # Eventually, it can call also pdflatex, when -p is selected
-            if args.pdflatex:
-                print("final cleaning file")
-                p = subprocess.Popen(
-                    [
-                        "perl",
-                        pre_process_compile_path,
-                        "-w",
-                        "-o",
-                        "-s",
+            PERL.cleaner(
                         temp_file_pre_expansion,
-                        args.output
-                     ]
-                )
-            else:
-                print("final cleaning file and pdf production")
-                p = subprocess.Popen(
-                    [
-                        "perl",
-                        pre_process_path,
-                        "-w",
-                        "-o",
-                        "-s",
-                        temp_file_pre_expansion,
-                        args.output
-                    ]
-                )
-
-            # close process.
-            p.communicate()
-
-            # remove spurious file
-            os.remove(temp_file_pre_expansion)
-            os.remove(temp_file_pre_expansion.replace('.tex', '.bak'))
+                        args.output,
+                        args.pdflatex)
         else:
             print('The file you inserted as input is not a .tex')
     else:

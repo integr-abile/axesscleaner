@@ -1,4 +1,6 @@
 import re
+import os.path
+import subprocess
 
 
 class Methods:
@@ -209,8 +211,6 @@ class Methods:
             # Search for new environments
             self.search_for_environments(math_no_dls)
             # Update the overall count
-            if jj >5000and jj < 6000:
-                print(line, self.dl_open, self.dd_dls_open, self.newEnv)
             self.dl_open[self.newEnv] += self.line_dl_open
             self.dd_dls_open[self.newEnv] += self.line_ddl_open
             if self.find_open_dls('$$') and self.line_ddl_open % 2 == 0:
@@ -222,7 +222,74 @@ class Methods:
             else:
                 math_no_dls = self.remove_sparse_dl(math_no_dls)
 
-
-
             temp.append(math_no_dls)
         return temp
+
+
+class PerlLauncher:
+
+    def __init__(self, ospath):
+        self.script_path = os.path.abspath(os.path.join(ospath, os.pardir))
+        self.perl_path = os.path.join(os.path.dirname(self.script_path), 'Perl')
+
+    def cleaner(self, input_file, output_file, pdf_check):
+
+
+        # Call perl scripts to clean dollars, underscores.
+        # Eventually, it can call also pdflatex, when pdf_check is true
+        if pdf_check:
+            print("final cleaning file")
+            pre_process_path = os.path.join(
+                self.perl_path,
+                "AxessibilityPreprocesspdfLatex.pl"
+            )
+            message = "cleaning with perl..."
+        else:
+            pre_process_path = os.path.join(
+                self.perl_path,
+                "AxessibilityPreprocess.pl"
+            )
+            message = "cleaning with perl and compiling..."
+
+        cmd_array = [
+                "perl",
+                pre_process_path,
+                "-w",
+                "-o",
+                "-s",
+                input_file,
+                output_file
+            ]
+
+        self.perl_launcher(cmd_array, message)
+
+        # remove spurious file
+        os.remove(input_file)
+        os.remove(input_file.replace('.tex', '.bak'))
+
+    def beautifier(self, input_string, output_file):
+
+        input_file = open(output_file, "w")
+        input_file.write(input_string)
+        input_file.close()
+
+        script = os.path.join(
+            self.perl_path,
+            "latexindent.pl"
+        )
+        message = "Beautify"
+        cmd_array = [
+                "perl",
+                script,
+                "-w",
+                "beautify.tex"
+              ]
+        self.perl_launcher(cmd_array, message)
+
+    @staticmethod
+    def perl_launcher(array, message):
+        print(message)
+        #open process
+        p = subprocess.Popen(array)
+        # close process.
+        p.communicate()

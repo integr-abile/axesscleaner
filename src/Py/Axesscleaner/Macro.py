@@ -335,15 +335,15 @@ class Methods:
         final_doc.extend(parsed_list)
 
         final_doc.extend(end_of_doc)
-
         if output_file is not None:
             with open(output_file, 'w') as o:
                 for jj, final_line in enumerate(final_doc):
                     if jj < len(final_doc)-1:
                         o.write(final_line + '\n')
+                        if jj>5000 and jj <6000:
+                            pass
                     else:
                         o.write(final_line)
-
             return ''
         else:
             final_string = ''

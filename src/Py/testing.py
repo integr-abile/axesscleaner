@@ -641,152 +641,235 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         \newcommand{\ZIN}{\infty} 
         \newcommand\CM[1]{\par\vskip3mm\begin{center}\fbox{\parbox{5in}{#1}} \end{center}\par\vskip3mm}    
         \begin{document} 
-        \begin{center}
-            \begin{table}
-                [h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
-                \begin{center}
-                    \hskip -7cm\parbox{3in}{ 
-                    \begin{tabular}
-                        [h]{||| c|| c| c |||} \hline\hline\hline &&\\
-                        Regole & $ +\ZIN +\ZIN =+\ZIN $& $ -\ZIN -\ZIN =-\ZIN $\\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & $
-                        \begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN\\
-                        (-\ZIN)(-\ZIN)=+\ZIN\end{array}$& $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$ \\
-                        && \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & $\displaystyle \left | \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $ & $\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\ZIN}=0 $ \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & $ 
-                        \begin{tabular}
-                            {c} $l+(+\ZIN)=l+\ZIN=+\ZIN$\\
-                            $l+(-\ZIN)=l-\ZIN=-\ZIN$ 
-                        \end{tabular}
-                        $ & $ l(+\ZIN)=\left\{ 
-                        \begin{tabular}
-                            {cl} $ +\ZIN $&\mbox{se $l>0$}\\
-                            $ -\ZIN$ &\mbox{se $l<0$} 
-                        \end{tabular}
-                        \right. $ \\
-                        
-                        \cline{2-3} &&\\
-                        
-                        & & \\
-                        & 
-                        \begin{tabular}
-                            {l} $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
-                            $ 0^{-\ZIN}=+\ZIN $ 
-                        \end{tabular}
-                        & $ 
-                        \begin{tabular}
-                            {l} $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $ \\
-                            $\displaystyle (+\ZIN)^{-\ZIN} =0$ 
-                        \end{tabular}
-                        $ \\
-                        
-                        && \\
-                        \hline\hline &&\\
-                        $
-                        \begin{array}{l}
-                            {\rm Forme} \\
-                            {\rm indeterminate} 
-                        \end{array}
-                        $ & $ +\ZIN - \ZIN $ & $ 0\cdot(\pm\ZIN) $ \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & $\displaystyle \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $ & $\displaystyle \frac{\displaystyle 0}{\displaystyle 0} $ \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & $\displaystyle 0^{\displaystyle 0} $ \qquad $\displaystyle (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$ \\
-                        &&\\
-                        \hline\hline\hline
-                    \end{tabular}
-                    }
-                \end{center}
-            \end{table}
-        \end{center}
+            \begin{center}
+	\begin{table}[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate}
+		\smallskip
+		\begin{center}
+			\hskip -7cm\parbox{3in}{  % inizio parbox
+				\begin{tabular}[h]{||| c|| c| c  |||}
+					\hline\hline\hline
+					                              &                                                                                           &                                                                                          \\
+					Regole                        & $  +\ZIN +\ZIN =+\ZIN $                                                                   & $  -\ZIN -\ZIN =-\ZIN $                                                                  \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN \\
+							(-\ZIN)(-\ZIN)=+\ZIN\end{array}$                                                             & $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$                                                    \\
+					                              &                                                                                           &                                                                                          \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  \left |  \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $    & $\displaystyle  \frac{\displaystyle 0}                       {\displaystyle \pm\ZIN}=0 $ \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $
+						\begin{tabular}
+							{c}
+							$l+(+\ZIN)=l+\ZIN=+\ZIN$ \\
+							$l+(-\ZIN)=l-\ZIN=-\ZIN$
+						\end{tabular}
+					$                             &
+					$
+						l(+\ZIN)=\left\{
+						\begin{tabular}{cl}
+							$ +\ZIN $ & \mbox{se $l>0$} \\
+							$ -\ZIN$  & \mbox{se $l<0$}
+						\end{tabular}
+						\right.
+					$
+					\\
+
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					%           %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+					                              &                                                                                           &
+					\\
+					                              & \begin{tabular}{l}
+						$ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
+						$ 0^{-\ZIN}=+\ZIN    $
+					\end{tabular}
+					                              &
+					$
+						\begin{tabular}{l}
+							$ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
+							\\
+							$\displaystyle    (+\ZIN)^{-\ZIN} =0$
+						\end{tabular}
+					$
+					\\
+					%&&\\
+					                              &                                                                                           &                                                                                          \\
+
+					%  \cline{2-3}
+
+					%%%%%%%%%%%%
+
+					%          &&\\
+					%            \cline{2-3}
+					%             &&\\
+					%                   &       $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $  & 
+					%                   
+					%                   \begin{tabular}{l}
+					%                           $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
+					%                          \\   
+					%                         $\displaystyle    (+\ZIN)^{-\ZIN} =0$ 
+					%                        \end{tabular}
+					%                      
+					%  %                   \\
+					%%%%%%%%%%%%
+
+					%           %%%%%%%%%%%%%%%%%%%%%%%%%                
+					\hline\hline
+					                              &                                                                                           &                                                                                          \\
+					$\begin{array}{l}
+							{\rm Forme} \\
+							{\rm indeterminate}
+						\end{array}$ & $ +\ZIN - \ZIN $                                                                          & $ 0\cdot(\pm\ZIN)  $                                                                     \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $                     & $\displaystyle  \frac{\displaystyle 0}{\displaystyle 0} $                                \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  0^{\displaystyle 0} $ \qquad  $\displaystyle  (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$                                                \\
+					                              &                                                                                           &                                                                                          \\
+					%%%%%%%%%%%%%%%%%
+					%    \cline{2-3}
+					%                                    &&\\
+					%       & $\displaystyle  (+\ZIN)^{\displaystyle 0} $ &  \\
+					%           &&\\
+					%%%%%%%%%%%%%%       
+
+					\hline\hline\hline
+				\end{tabular}
+			}   % fine parbox
+		\end{center}
+	\end{table}
+\end{center}
         \end{document}
         """
         string_to_be = r"""
-        \documentclass[11pt,reqno]{amsart} 
+                \documentclass[11pt,reqno]{amsart} 
         \begin{document} 
         \begin{center}
-            \begin{table}
-                [h]\caption{\label{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
-                \begin{center}
-                    \hskip -7cm\parbox{3in}{ 
-                    \begin{tabular}
-                        [h]{||| c|| c| c |||} \hline\hline\hline &&\\
-                        Regole & \( +\infty +\infty =+\infty \)& \( -\infty -\infty =-\infty \)\\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & \(
-                        \begin{array}{l}(+\infty)(+\infty)=+\infty\\
-                        (-\infty)(-\infty)=+\infty\end{array}\)& \((-\infty)(+\infty)=-\infty=(+\infty)(-\infty)\) \\
-                        && \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & \(\displaystyle \left | \frac{\displaystyle \pm\infty}{\displaystyle 0}\right |=+\infty \) & \(\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\infty}=0 \) \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & \( 
-                        \begin{tabular}
-                            {c} \(l+(+\infty)=l+\infty=+\infty\)\\
-                            \(l+(-\infty)=l-\infty=-\infty\) 
-                        \end{tabular}
-                        \) & \( l(+\infty)=\left\{ 
-                        \begin{tabular}
-                            {cl} \( +\infty \)&\mbox{se \(l>0\)}\\
-                            \( -\infty\) &\mbox{se \(l<0\)} 
-                        \end{tabular}
-                        \right. \) \\
-                        
-                        \cline{2-3} &&\\
-                        
-                        & & \\
-                        & 
-                        \begin{tabular}
-                            {l} \( \displaystyle 0 ^{\displaystyle +\infty}=0 \) \\
-                            \( 0^{-\infty}=+\infty \) 
-                        \end{tabular}
-                        & \( 
-                        \begin{tabular}
-                            {l} \( \displaystyle (+\infty )^{\displaystyle +\infty}=+\infty \) \\
-                            \(\displaystyle (+\infty)^{-\infty} =0\) 
-                        \end{tabular}
-                        \) \\
-                        
-                        && \\
-                        \hline\hline &&\\
-                        \(
-                        \begin{array}{l}
-                            {\rm Forme} \\
-                            {\rm indeterminate} 
-                        \end{array}
-                        \) & \( +\infty - \infty \) & \( 0\cdot(\pm\infty) \) \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & \(\displaystyle \frac{\displaystyle \pm\infty}{\displaystyle \pm\infty} \) & \(\displaystyle \frac{\displaystyle 0}{\displaystyle 0} \) \\
-                        &&\\
-                        \cline{2-3} &&\\
-                        & \(\displaystyle 0^{\displaystyle 0} \) \qquad \(\displaystyle (+\infty)^{\displaystyle 0} \) & \(\displaystyle 1^{\displaystyle \pm\infty}\) \\
-                        &&\\
-                        \hline\hline\hline
-                    \end{tabular}
-                    }
-                \end{center}
-            \end{table}
-        \end{center}
+	\begin{table}[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate}
+		\smallskip
+		\begin{center}
+			\hskip -7cm\parbox{3in}{  % inizio parbox
+				\begin{tabular}[h]{||| c|| c| c  |||}
+					\hline\hline\hline
+					                              &                                                                                           &                                                                                          \\
+					Regole                        & $  +\ZIN +\ZIN =+\ZIN $                                                                   & $  -\ZIN -\ZIN =-\ZIN $                                                                  \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN \\
+							(-\ZIN)(-\ZIN)=+\ZIN\end{array}$                                                             & $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$                                                    \\
+					                              &                                                                                           &                                                                                          \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  \left |  \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $    & $\displaystyle  \frac{\displaystyle 0}                       {\displaystyle \pm\ZIN}=0 $ \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $
+						\begin{tabular}
+							{c}
+							$l+(+\ZIN)=l+\ZIN=+\ZIN$ \\
+							$l+(-\ZIN)=l-\ZIN=-\ZIN$
+						\end{tabular}
+					$                             &
+					$
+						l(+\ZIN)=\left\{
+						\begin{tabular}{cl}
+							$ +\ZIN $ & \mbox{se $l>0$} \\
+							$ -\ZIN$  & \mbox{se $l<0$}
+						\end{tabular}
+						\right.
+					$
+					\\
+
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					%           %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+					                              &                                                                                           &
+					\\
+					                              & \begin{tabular}{l}
+						$ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
+						$ 0^{-\ZIN}=+\ZIN    $
+					\end{tabular}
+					                              &
+					$
+						\begin{tabular}{l}
+							$ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
+							\\
+							$\displaystyle    (+\ZIN)^{-\ZIN} =0$
+						\end{tabular}
+					$
+					\\
+					%&&\\
+					                              &                                                                                           &                                                                                          \\
+
+					%  \cline{2-3}
+
+					%%%%%%%%%%%%
+
+					%          &&\\
+					%            \cline{2-3}
+					%             &&\\
+					%                   &       $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $  & 
+					%                   
+					%                   \begin{tabular}{l}
+					%                           $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
+					%                          \\   
+					%                         $\displaystyle    (+\ZIN)^{-\ZIN} =0$ 
+					%                        \end{tabular}
+					%                      
+					%  %                   \\
+					%%%%%%%%%%%%
+
+					%           %%%%%%%%%%%%%%%%%%%%%%%%%                
+					\hline\hline
+					                              &                                                                                           &                                                                                          \\
+					$\begin{array}{l}
+							{\rm Forme} \\
+							{\rm indeterminate}
+						\end{array}$ & $ +\ZIN - \ZIN $                                                                          & $ 0\cdot(\pm\ZIN)  $                                                                     \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $                     & $\displaystyle  \frac{\displaystyle 0}{\displaystyle 0} $                                \\
+					                              &                                                                                           &                                                                                          \\
+					\cline{2-3}
+					                              &                                                                                           &                                                                                          \\
+					                              & $\displaystyle  0^{\displaystyle 0} $ \qquad  $\displaystyle  (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$                                                \\
+					                              &                                                                                           &                                                                                          \\
+					%%%%%%%%%%%%%%%%%
+					%    \cline{2-3}
+					%                                    &&\\
+					%       & $\displaystyle  (+\ZIN)^{\displaystyle 0} $ &  \\
+					%           &&\\
+					%%%%%%%%%%%%%%       
+
+					\hline\hline\hline
+				\end{tabular}
+			}   % fine parbox
+		\end{center}
+	\end{table}
+\end{center}
         \end{document}"""
 
         axmacro = Macro.Methods()
 
         axmacro.gather_macro(string_to_parse)
 
-        string_parsed = axmacro.remove_macro(string_to_parse, None, False);
+        string_parsed = axmacro.remove_macro(string_to_parse, None, False)
+        print(string_parsed)
 
         self.assertEqual(string_to_be, string_parsed)
         print(string_parsed)
