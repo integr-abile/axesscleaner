@@ -302,7 +302,6 @@ class Methods:
                 If we are outside, we check if we reached the beginning of it. 
                 When the docs ends, it stops by default. 
             """
-
             if should_substitute:
                 if re.search(self.END_PATTERN, reading_line):
                     end_of_doc.append(reading_line)
@@ -361,13 +360,17 @@ class Methods:
                             '',
                             self.recursive_expansion(ln))
         except Exception as e:
-            print(e)
+            print('do inline subs', e)
+            print('do inline subs - line: ', type(ln), ln)
 
     def remove_multiline_macros(self, array):
+        print("open multline array")
+        print(array)
         temp = []
         is_parsing = False
         line = None
         for yy, lines in enumerate(array):
+            print(lines,yy)
             if r'\@@$$@@!!' in lines:
                 is_parsing = True
                 if line is None:
@@ -429,6 +432,7 @@ class Methods:
         replacement text is created directly. In the second case, multi_substitution_regexp is called.
 
         """
+        # print('inside recursive expansion',lin, type(lin))
         for subs in self.macro_list:
             search = re.search(subs.escape_name, lin)
             if not search:

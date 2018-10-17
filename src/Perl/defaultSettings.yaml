@@ -8,28 +8,28 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # See http://www.gnu.org/licenses/.
-# 
+#
 # Chris Hughes, 2017
-# 
+#
 # For all communication, please visit: https://github.com/cmhughes/latexindent.pl
 
 
-# You're welcome to change anything you like in here, but 
-# it would probably be better to have your own user settings 
+# You're welcome to change anything you like in here, but
+# it would probably be better to have your own user settings
 # files somewhere else - remember that this file may be overwritten
 # when you update your distribution. Please see the manual
 # for details of how to setup your own settings files.
 #
 # Please read the manual first to understand what each switch does.
 
-# latexindent can be called without a file extension, 
+# latexindent can be called without a file extension,
 # e.g, simply
 #       latexindent myfile
 # in which case the choice of file extension is chosen
@@ -44,12 +44,12 @@ fileExtensionPreference:
 # default file extension of backup file (if original is overwritten with -w switch)
 # for example, if your .tex file is called
 #       myfile.tex
-# and you specify the backupExtension as BACKUP.bak then your 
+# and you specify the backupExtension as BACKUP.bak then your
 # backup file will be
 #       myfileBACKUP.bak
 backupExtension: .bak
 
-# only one backup per file; if onlyOneBackUp is 0 then, as a safety measure, 
+# only one backup per file; if onlyOneBackUp is 0 then, as a safety measure,
 # the number on the extension increments by 1 each time:
 #     myfile.bak0, myfile.bak1, myfile.bak2
 #
@@ -57,13 +57,13 @@ backupExtension: .bak
 # be overwritten each time (not recommended until you trust the script)
 onlyOneBackUp: 0
 
-# some users may only want a set number of backup files, 
+# some users may only want a set number of backup files,
 # say at most 3; in which case, they can change this switch.
-# If maxNumberOfBackUps is set to 0 (or less) then infinitely 
+# If maxNumberOfBackUps is set to 0 (or less) then infinitely
 # many backups are possible, unless onlyOneBackUp is switched on
 maxNumberOfBackUps: 0
 
-# some users may wish to cycle through back up files, for example, 
+# some users may wish to cycle through back up files, for example,
 # with maxNumberOfBackUps: 4, they may wish to delete the oldest
 # back up file, and keep only the most recent.
 #
@@ -81,14 +81,14 @@ logFilePreferences:
     showAmalgamatedSettings: 0
     showDecorationStartCodeBlockTrace: 0
     showDecorationFinishCodeBlockTrace: 0
-    endLogFileWith: '--------------' 
+    endLogFileWith: '--------------'
     showGitHubInfoFooter: 1
     PatternLayout:
         default: "%A%n"
         trace: "%A%n"
         ttrace: "%A%n"
 
-#  verbatim environments specified 
+#  verbatim environments specified
 #  in this field will not be changed at all!
 verbatimEnvironments:
     verbatim: 1
@@ -100,7 +100,7 @@ verbatimCommands:
     verb: 1
     lstinline: 1
 
-#  no indent blocks (not necessarily verbatim 
+#  no indent blocks (not necessarily verbatim
 #  environments) which are marked as %\begin{noindent}
 #  or anything else that the user puts in this hash
 #  table
@@ -108,7 +108,7 @@ noIndentBlock:
     noindent: 1
     cmhtest: 1
 
-# remove trailing whitespace from all lines 
+# remove trailing whitespace from all lines
 removeTrailingWhitespace:
     beforeProcessing: 0
     afterProcessing: 1
@@ -141,7 +141,7 @@ defaultIndent: "\t"
 
 # name of code blocks that should have their body aligned at ampersand delimiters
 lookForAlignDelims:
-   tabular: 
+   tabular:
       delims: 1
       alignDoubleBackSlash: 1
       spacesBeforeDoubleBackSlash: 1
@@ -154,7 +154,8 @@ lookForAlignDelims:
       delims: 1
    longtable: 1
    tabu: 1
-   array: 1
+   array:
+     delims: 1
    matrix: 1
    bmatrix: 1
    Bmatrix: 1
@@ -170,7 +171,7 @@ lookForAlignDelims:
    dcases: 1
    listabla: 1
 
-# if you want the script to look for \item commands 
+# if you want the script to look for \item commands
 # and format it, as follows (for example),
 #       \begin{itemize}
 #           \item content here
@@ -187,7 +188,7 @@ indentAfterItems:
 
 # if you want to use other names for your items (such as, for example, part)
 # then populate them here; note that you can trick latexindent.pl
-# into indenting all kinds of commands (within environments specified in 
+# into indenting all kinds of commands (within environments specified in
 # indentAfterItems) using this technique.
 itemNames:
     item: 1
@@ -212,17 +213,17 @@ specialBeginEnd:
 
 # if you want to add indentation after
 # a heading, such as \part, \chapter, etc
-# then populate it in here - you can add 
-# an indent rule to indentRules if you would 
+# then populate it in here - you can add
+# an indent rule to indentRules if you would
 # like something other than defaultIndent
 #
-# you can also change the level if you like, 
+# you can also change the level if you like,
 # or add your own title command
 indentAfterHeadings:
     part:
        indentAfterThisHeading: 0
        level: 1
-    chapter: 
+    chapter:
        indentAfterThisHeading: 0
        level: 2
     section:
@@ -247,9 +248,9 @@ indentAfterHeadings:
 # maximum indentation, off by default
 maximumIndentation: -1
 
-# if you don't want to have additional indentation 
+# if you don't want to have additional indentation
 # in an environment put it in this hash table; note that
-# environments in this field will inherit 
+# environments in this field will inherit
 # the *current* level of indentation they just won't
 # get any *additional*.
 noAdditionalIndent:
@@ -265,7 +266,7 @@ noAdditionalIndent:
     frame: 0
 
 # if you have indent rules for particular environments
-# or commands, put them in here; for example, you might just want 
+# or commands, put them in here; for example, you might just want
 # to use a space " " or maybe a double tab "\t\t"
 indentRules:
    myenvironment: "\t\t"
@@ -290,7 +291,7 @@ noAdditionalIndentGlobal:
     afterHeading: 0
     filecontents: 0
 
-# set indentRules globally for codeblocks; these need 
+# set indentRules globally for codeblocks; these need
 # to be horizontal spaces, if they are to be used
 indentRulesGlobal:
     environments: 0
@@ -310,7 +311,7 @@ indentRulesGlobal:
 commandCodeBlocks:
     roundParenthesesAllowed: 1
     stringsAllowedBetweenArguments:
-      - 
+      -
         amalgamate: 1
       - 'node'
       - 'at'
@@ -319,38 +320,38 @@ commandCodeBlocks:
       - '\+\+'
       - '\-\-'
     commandNameSpecial:
-      - 
+      -
         amalgamate: 1
       - '@ifnextchar\['
 
-# modifyLineBreaks will only be searched if the -m 
+# modifyLineBreaks will only be searched if the -m
 # switch is active
 #    BeginStartsOnOwnLine: 1
 #       if a begin statement is not already on its own line,
 #       then, with -m active, it will be moved to its own line.
 #
-#       when set to 1, e.g 
+#       when set to 1, e.g
 #               some text some text \begin{myenvironment}
 #           will be changed to
-#               some text some text 
+#               some text some text
 #               \begin{myenvironment}
-#       when set to -1, e.g 
-#               some text some text 
+#       when set to -1, e.g
+#               some text some text
 #               \begin{myenvironment}
 #           will be changed to
 #               some text some text \begin{myenvironment}
 #       when set to 0, the switch is ignored
 #
 #    BodyStartsOnOwnLine: 1
-#       if body does not already start on its own line, then with 
+#       if body does not already start on its own line, then with
 #       -m active, it will be moved to its own line.
 #
-#       when set to 1, e.g 
+#       when set to 1, e.g
 #               \begin{myenv}body text body text
 #           will be changed to
 #               \begin{myenv}
 #                   body text body text
-#       when set to -1, e.g 
+#       when set to -1, e.g
 #               \begin{myenv}
 #                   body text body text
 #           will be changed to
@@ -361,32 +362,32 @@ commandCodeBlocks:
 #       if an end statement is not already on its own line,
 #       then, with -m active, it will be moved to its own line.
 #
-#       when set to 1, e.g 
+#       when set to 1, e.g
 #               some text some text \end{myenvironment}
 #           will be changed to
-#               some text some text 
+#               some text some text
 #               \end{myenvironment}
-#       when set to -1, e.g 
-#               some text some text 
+#       when set to -1, e.g
+#               some text some text
 #               \end{myenvironment}
 #           will be changed to
 #               some text some text \end{myenvironment}
 #       when set to 0, the switch is ignored
 #
 #    EndFinishesWithLineBreak: 1
-#       this switch adjusts line breaks immmediately 
+#       this switch adjusts line breaks immmediately
 #       after an end statement (with -m active)
-#       
-#       when set to 1, e.g 
-#               \end{myenvironment}some text some text 
+#
+#       when set to 1, e.g
+#               \end{myenvironment}some text some text
 #           will be changed to
 #                   \end{myenvironment}
-#                   some text some text 
-#       when set to -1, e.g 
+#                   some text some text
+#       when set to -1, e.g
 #               \end{myenvironment}
-#               some text some text 
+#               some text some text
 #           will be changed to
-#                   \end{myenvironment}some text some text 
+#                   \end{myenvironment}some text some text
 #       when set to 0, the switch is ignored
 #
 # Naturally, you can specify settings for individual environments,
@@ -395,7 +396,7 @@ modifyLineBreaks:
     preserveBlankLines: 1
     condenseMultipleBlankLinesInto: 1
     oneSentencePerLine:
-        manipulateSentences: 0     
+        manipulateSentences: 0
         removeSentenceLineBreaks: 1
         textWrapSentences: 0
         sentenceIndent: ""
@@ -424,7 +425,7 @@ modifyLineBreaks:
         perCodeBlockBasis: 0
         all: 0
         alignAtAmpersandTakesPriority: 1
-        environments: 
+        environments:
             quotation: 0
         ifElseFi: 0
         optionalArguments: 0
@@ -439,7 +440,7 @@ modifyLineBreaks:
         all: 0
         beforeTextWrap: 0
         alignAtAmpersandTakesPriority: 1
-        environments: 
+        environments:
             quotation: 0
         ifElseFi: 0
         optionalArguments: 0

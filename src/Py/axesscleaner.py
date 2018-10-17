@@ -37,7 +37,6 @@ parser.add_argument('-a',
 args = parser.parse_args()
 
 
-
 def main():
 
     # Begin of actual methods. First check if the input is a LaTex file
@@ -59,13 +58,13 @@ def main():
             )
             macro_file = os.path.join(
                 folder_path,
-                "user_macro.sty"
+                "usermacro.sty"
             )
             temp_file_pre_expansion = os.path.join(
                 folder_path,
                 "temp_pre.tex"
             )
-            beautified_file  = os.path.join(
+            beautified_file = os.path.join(
                 folder_path,
                 "beautify.tex"
             )
@@ -86,6 +85,7 @@ def main():
 
                     line = MACRO.strip_comments(i.read())
                     MACRO.gather_macro(line)
+
             # Remove the macros from the main file and writes the output to a temp file.
             print("remove macros from main file")
             with input_latex_methods.open_encode_safe(args.input) as i:
@@ -107,7 +107,7 @@ def main():
 
             # Remove temp file
             os.remove(temp_file_pre_expansion)
-            # beautify file
+            # beautify file (indented form with correct spacing for environments)
             PERL.beautifier(final_text_to_expand, beautified_file)
             # Remove macros from the entire file and put the result to temp file
             print("remove macros from entire file")

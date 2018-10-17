@@ -142,8 +142,8 @@ class Methods:
 
     def search_for_environments(self, line):
 
-        regex_plus = r"\\begin({|)(array|tabular)(}|).*$"
-        regex_minus = r"\\end({|)(array|tabular)(}|).*$"
+        regex_plus = r"\\begin({|)(table|tabular)(}|).*$"
+        regex_minus = r"\\end({|)(table|tabular)(}|).*$"
         if re.findall(regex_minus, line):
             self.dl_open.pop(self.newEnv)
             self.dd_dls_open.pop(self.newEnv)
