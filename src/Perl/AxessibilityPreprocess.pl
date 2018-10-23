@@ -89,6 +89,10 @@ my %nosubstitutions = ("tikzpicture"=>1, "verbatim"=>1, "nosubblock"=>1);
 # switch to toggle nosubstitutions- initially off
 my $nosubs = 0;
 
+# switch to toggle nosubstitutions (for underscore) - initially off
+
+my $nosubs_sb = 0;
+
 # switch to toggle inline formula split on more lines- initially off
 my $splitinline = 0;
 
@@ -197,7 +201,7 @@ while(<MAINFILE>)
     # substitute $$.*$$ with \[.*\]
     s/\$\$(.*?)\$\$/\\\[$1\\\]/g unless($nosubs);
  
-    # check if environment opens and splits on next line(s)
+    #ï¿½check if environment opens and splits on next line(s)
     # if yes, open environment and set corresponding flag
     if (/\$\$/)
     {
@@ -227,7 +231,7 @@ while(<MAINFILE>)
     
     # substitute _ with \
     $_  =~  s {_}{\\sb }g unless($nosubs);
-       
+    $_  =~  s : \\(ref|cite|label|usepackage)( |)(\{)([^\}]+)\} : $&=~ s {\\sb }{_}gr :gsex;
     push(@lines,$_);
 
 }
