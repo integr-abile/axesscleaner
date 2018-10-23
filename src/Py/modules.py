@@ -361,8 +361,8 @@ class MacroMethods:
 
         # list that will contain the full file (line by line)
 
-        line = self.strip_comments(stz)
-        st = line.split('\n')
+
+        st = stz.split('\n')
         final_doc = []
         list_to_parse = []
         end_of_doc = []
@@ -374,31 +374,32 @@ class MacroMethods:
                 If we are outside, we check if we reached the beginning of it. 
                 When the docs ends, it stops by default. 
             """
-            if should_substitute:
-                if re.search(self.END_PATTERN, reading_line):
-                    end_of_doc.append(reading_line)
-                    break
+            reading_line = self.strip_comments(reading_line)
+            if reading_line.strip():
+                if should_substitute:
+                    if re.search(self.END_PATTERN, reading_line):
+                        end_of_doc.append(reading_line)
+                        break
+                    else:
+                        # Put all the lines to sub in one list
+                        list_to_parse.append(
+                            reading_line
+                        )
                 else:
-                    # Put all the lines to sub in one list
-                    list_to_parse.append(
-                        reading_line
-                    )
-            else:
-                if re.search(self.START_PATTERN, reading_line):
-                    should_substitute = True
-                    if self.axessibility_found is False and add_package is True:
-                        reading_line = self.text_methods.add_axessibility(reading_line)
-                        self.axessibility_found = True
-                else:
-                    pass
+                    if re.search(self.START_PATTERN, reading_line):
+                        should_substitute = True
+                        if self.axessibility_found is False and add_package is True:
+                            reading_line = self.text_methods.add_axessibility(reading_line)
+                            self.axessibility_found = True
+                    else:
+                        pass
 
-                regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
-                result = re.search(regexp, reading_line)
-                if result is None:
-                    final_doc.append(reading_line)
+                    regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +){(.*(?=\}))\}.*$"
+                    result = re.search(regexp, reading_line)
+                    if result is None:
+                        final_doc.append(reading_line)
 
         # perform the actual substitution (only on macros on one line)
-
         parsed_list_inline = list(map(lambda item: self.do_inline_sub(item), list_to_parse))
         parsed_list = self.remove_multiline_macros(parsed_list_inline)
         parsed_list_dls = self.dollars_methods.remove_dls(parsed_list)

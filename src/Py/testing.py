@@ -446,8 +446,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
                   r"\begin{document}"
                   "\n"
                   "This is a very long text, with new lines and other stuff. For example an `accent or ' "
-                  "\n"
-                  "\n"
+                  "\n"                  
                   "a weird new line. This should be untouched."
                   "\n"                        
                   r"\par\vskip3mm\begin{center}\fbox{\parbox{5in}{"
@@ -634,8 +633,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         self.assertEqual(string_to_test, string_to_match)
 
     def test_difficult_parsing_nested(self):
-        string_to_parse = r"""
-\documentclass[11pt,reqno]{amsart}
+        string_to_parse = r"""\documentclass[11pt,reqno]{amsart}
 \newcommand{\F}{\mathcal{F}} 
 \renewcommand{\L}{\mathcal{L}} 
 \newcommand{\LL}{\L^2} 
@@ -650,7 +648,6 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 		[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
 		\begin{center}
 			\hskip -7cm\parbox{3in}{ 
-			
 			\begin{tabular}
 				[h]{||| c|| c| c |||} \hline\hline\hline & & \\
 				Regole & $ +\ZIN +\ZIN =+\ZIN $ & $ -\ZIN -\ZIN =-\ZIN $ \\
@@ -679,9 +676,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 					$ -\ZIN$ & \mbox{se $l<0$} 
 				\end{tabular}
 				\right. $ \\
-				
 				\cline{2-3} & & \\
-				
 				& & \\
 				& 
 				\begin{tabular}
@@ -694,9 +689,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 					$\displaystyle (+\ZIN)^{-\ZIN} =0$ 
 				\end{tabular}
 				$ \\
-				
 				& & \\
-				
 				\hline\hline & & \\
 				$ 
 				\begin{array}{l}
@@ -711,7 +704,6 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 				\cline{2-3} & & \\
 				& $\displaystyle 0^{\displaystyle 0} $ \qquad $\displaystyle (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$ \\
 				& & \\
-				
 				\hline\hline\hline 
 			\end{tabular}
 			} 
@@ -720,15 +712,13 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 \end{center}
 \end{document}
         """
-        string_to_be = r"""
-\documentclass[11pt,reqno]{amsart}
+        string_to_be = r"""\documentclass[11pt,reqno]{amsart}
 \begin{document} 
 \begin{center}
 	\begin{table}
 		[h]\caption{\label{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
 		\begin{center}
 			\hskip -7cm\parbox{3in}{ 
-			
 			\begin{tabular}
 				[h]{||| c|| c| c |||} \hline\hline\hline & & \\
 				Regole & \( +\infty +\infty =+\infty \) & \( -\infty -\infty =-\infty \) \\
@@ -757,9 +747,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 					\( -\infty\) & \mbox{se \(l<0\)} 
 				\end{tabular}
 				\right. \) \\
-				
 				\cline{2-3} & & \\
-				
 				& & \\
 				& 
 				\begin{tabular}
@@ -772,9 +760,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 					\(\displaystyle (+\infty)^{-\infty} =0\) 
 				\end{tabular}
 				\) \\
-				
 				& & \\
-				
 				\hline\hline & & \\
 				\( 
 				\begin{array}{l}
@@ -789,7 +775,6 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 				\cline{2-3} & & \\
 				& \(\displaystyle 0^{\displaystyle 0} \) \qquad \(\displaystyle (+\infty)^{\displaystyle 0} \) & \(\displaystyle 1^{\displaystyle \pm\infty}\) \\
 				& & \\
-				
 				\hline\hline\hline 
 			\end{tabular}
 			} 
