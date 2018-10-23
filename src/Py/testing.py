@@ -805,6 +805,54 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         string_parsed = axmacro.remove_macro(string_to_parse, None, False)
         self.assertEqual(string_parsed,string_to_be)
 
+    def test_issue_4(self):
+
+        string_to_parse = (r"\documentclass[11pt,reqno]{amsart}"
+                           "\n"
+                           r"\newcommand{\zb}[1]{{\bf #1}}"
+                           "\n"
+                           r"\begin{document}"
+                           "\n"
+                           r"\begin{Lemma}"
+                           "\n"
+                           r"Per ogni $ \zb x $, $ \zb y $ vale"
+                           "\n"
+                           r"\["
+                           "\n"
+                           r"\biggl|\, \| \zb x\| -\| \zb y\| \,\biggr|\leq"
+                           "\n"
+                           r"\| \zb x-\zb y\| \,."
+                           "\n"
+                           r"\]"
+                           "\n"
+                           r"\end{Lemma}"
+                           "\n"
+                           r"\end{document}")
+
+        string_to_be = (r"\documentclass[11pt,reqno]{amsart}"
+                        "\n"
+                        r"\begin{document}"
+                        "\n"
+                        r"\begin{Lemma}"
+                        "\n"
+                        r"Per ogni \( {\bf x} \), \( {\bf y} \) vale"
+                        "\n"
+                        r"\["
+                        "\n"
+                        r"\biggl|\, \| {\bf x}\| -\| {\bf y}\| \,\biggr|\leq"
+                        "\n"
+                        r"\| {\bf x}-{\bf y}\| \,."
+                        "\n"
+                        r"\]"
+                        "\n"
+                        r"\end{Lemma}"
+                        "\n"
+                        r"\end{document}")
+        axmacro = md.MacroMethods()
+        axmacro.gather_macro(string_to_parse)
+        string_parsed = axmacro.remove_macro(string_to_parse, None, False)
+        self.assertEqual(string_to_be,string_parsed)
+
 
 class AxessCleanerTextMethods(unittest.TestCase):
 

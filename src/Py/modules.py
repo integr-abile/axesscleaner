@@ -514,7 +514,7 @@ class MacroMethods:
                 else:
                     to_sub = subs.raw_replacement
                 try:
-                    lin = re.sub(subs.regexp, re.sub(r'([\\|\"])', r'\\\1', to_sub), lin)
+                    lin = re.sub(subs.regexp, re.sub(r'([\\\"])', r'\\\1', to_sub), lin)
                 except Exception as e:
                     print('ERROR'+e, lin)
         for subs in self.macro_list:
@@ -616,7 +616,7 @@ class MacroMethods:
 
         # clean the list
 
-        clean_input_list = map(lambda strz: re.sub(r'([\"|\'|\||\\])', r'\\\1', strz), input_list)
+        clean_input_list = map(lambda strz: re.sub(r'([\"\'\|\\])', r'\\\1', strz), input_list)
         # perform the actual substitution. Each #1,#2,#3,... is subbed with the content of input_list.
         if count_close==count_open and len(input_list) == int(rexpr.number_of_inputs):
             replacement_text: str = rexpr.raw_replacement
@@ -673,7 +673,7 @@ class Dollars:
             subbed = ""+line
             for out_elm in outer:
                 to_sub = self.remove_inline_dls(out_elm, '$')
-                subbed = re.sub(re.escape(out_elm), re.sub(r'([\\|\"])', r'\\\1', to_sub), subbed)
+                subbed = re.sub(re.escape(out_elm), re.sub(r'([\\\"])', r'\\\1', to_sub), subbed)
             return re.sub(
                     r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
                     '',
