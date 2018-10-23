@@ -89,6 +89,10 @@ my %nosubstitutions = ("tikzpicture"=>1, "verbatim"=>1, "nosubblock"=>1);
 # switch to toggle nosubstitutions- initially off
 my $nosubs = 0;
 
+# switch to toggle nosubstitutions (for underscore) - initially off
+
+my $nosubs_sb = 0;
+
 # switch to toggle inline formula split on more lines- initially off
 my $splitinline = 0;
 

@@ -1,6 +1,6 @@
 import unittest
-
-from Axesscleaner import Macro, Text
+import sys
+import modules as md
 
 
 TEST_STRING = (r"\documentclass[11pt,reqno]{amsart}"
@@ -101,6 +101,8 @@ STRING_NO_COMMENTS = (r"\documentclass[11pt,reqno]{amsart}"
                       )
 
 class AxessCleanerMacro(unittest.TestCase):
+
+
     def setUp(self):
         pass
 
@@ -127,7 +129,7 @@ class AxessCleanerMacro(unittest.TestCase):
            'raw_replacement': '\\sumz_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2'
         }
 
-        macro = Macro.Macro(dict_ok)
+        macro = md.Macro(dict_ok)
 
         self.assertEqual(macro.raw_replacement, dict_ok["raw_replacement"])
         self.assertEqual(macro.macro_name, dict_ok["macro_name"])
@@ -138,7 +140,7 @@ class AxessCleanerMacro(unittest.TestCase):
 
     def test_enhance_raw_replacement(self):
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         axmacro.gather_macro('\DeclareMathOperator{\im}{Im}')
 
@@ -169,19 +171,21 @@ class AxessCleanerMacro(unittest.TestCase):
             'regexp': '\\\\weird\\s*(.*$)'
         }
 
-        macro = Macro.Macro(dict_ok)
+        macro = md.Macro(dict_ok)
 
         self.assertEqual(macro.regexp, enriched_dict_ok["regexp"])
         self.assertEqual(macro.escape_name, enriched_dict_ok["escape_name"])
 
     def test_is_not_empty(self):
 
-        macro = Macro.Macro({})
+        macro = md.Macro({})
 
         self.assertEqual(macro.is_not_empty(), False)
 
 
 class AxessCleanerMacroMethods(unittest.TestCase):
+
+    maxDiff = None
 
     def setUp(self):
         pass
@@ -191,7 +195,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 
     def test_strip_comments(self):
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         self.assertNotEqual(STRING_NO_COMMENTS, TEST_STRING)
         self.assertEqual(STRING_NO_COMMENTS, axmacro.strip_comments(TEST_STRING))
@@ -223,7 +227,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             'regexp': '\\\\weird\\s*(.*$)'
         }
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         self.assertEqual(axmacro.parse_macro_structure(text).to_dict(), dict_ok)
         self.assertNotEqual(axmacro.parse_macro_structure(text).to_dict(), dict_not)
@@ -287,14 +291,14 @@ class AxessCleanerMacroMethods(unittest.TestCase):
             }
         ]
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
         axmacro.gather_macro(TEST_STRING)
         self.assertEqual(axmacro.macro_list[1].to_dict(), array_test[1])
         self.assertEqual(axmacro.macro_list[3].to_dict(), array_test[3])
         self.assertNotEqual(axmacro.macro_list[1].to_dict(), array_test[3])
 
     def test_remove_macro(self):
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         axmacro.gather_macro(TEST_STRING)
 
@@ -391,7 +395,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
         self.assertEqual(string_to_be_axessibility, string_new_axessibility)
 
     def test_remove_multiline_macro(self):
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         STRING = (r"\documentclass[11pt,reqno]{amsart}"
                   "\n"
@@ -594,7 +598,7 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 
     def test_recursive_expansion(self):
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         axmacro.gather_macro(TEST_STRING)
 
@@ -614,15 +618,15 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 
     def test_multi_substitution_regexp(self):
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
-        macro = Macro.Macro({'command_type': 'newcommand',
+        macro = md.Macro({'command_type': 'newcommand',
                              'macro_name': '\\weird',
                              'separator_open': '{',
                              'separator_close': '}',
                              'number_of_inputs': '3',
                              'raw_replacement': '\\sum_{n = #1}^{#2} \\F(#3) - 7 +\\frac{#1}{#2}',
-                            })
+                             })
 
         string_to_test = axmacro.multi_substitution_regexp(macro,r"{\frac{1}{\{\LL\}}}{a}\alpha d$$")
         string_to_match = r"\sum_{n = \frac{1}{\{\LL\}}}^{a} \F(\alpha) - 7 +\frac{\frac{1}{\{\LL\}}}{a} d$$"
@@ -631,248 +635,175 @@ class AxessCleanerMacroMethods(unittest.TestCase):
 
     def test_difficult_parsing_nested(self):
         string_to_parse = r"""
-        \documentclass[11pt,reqno]{amsart} 
-        \newcommand{\F}{\mathcal{F}} 
-        \renewcommand{\L}{\mathcal{L}} 
-        \newcommand{\LL}{\L^2} 
-        \newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}} \DeclareMathOperator{\im}{Im} 
-        \newcommand{\ztc}{\;|\ } 
-        \newcommand{\ZLA}{\label} 
-        \newcommand{\ZIN}{\infty} 
-        \newcommand\CM[1]{\par\vskip3mm\begin{center}\fbox{\parbox{5in}{#1}} \end{center}\par\vskip3mm}    
-        \begin{document} 
-            \begin{center}
-	\begin{table}[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate}
-		\smallskip
+\documentclass[11pt,reqno]{amsart}
+\newcommand{\F}{\mathcal{F}} 
+\renewcommand{\L}{\mathcal{L}} 
+\newcommand{\LL}{\L^2} 
+\newcommand{\weird}[3]{\sum_{n = #1}^{#2} \F(#3) - 7 +\frac{#1}{#2}} \DeclareMathOperator{\im}{Im} 
+\newcommand{\ztc}{\;|\ } 
+\newcommand{\ZLA}{\label} 
+\newcommand{\ZIN}{\infty} 
+\newcommand\CM[1]{\par\vskip3mm\begin{center}\fbox{\parbox{5in}{#1}}\end{center}\par\vskip3mm} 
+\begin{document} 
+\begin{center}
+	\begin{table}
+		[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
 		\begin{center}
-			\hskip -7cm\parbox{3in}{  % inizio parbox
-				\begin{tabular}[h]{||| c|| c| c  |||}
-					\hline\hline\hline
-					                              &                                                                                           &                                                                                          \\
-					Regole                        & $  +\ZIN +\ZIN =+\ZIN $                                                                   & $  -\ZIN -\ZIN =-\ZIN $                                                                  \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN \\
-							(-\ZIN)(-\ZIN)=+\ZIN\end{array}$                                                             & $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$                                                    \\
-					                              &                                                                                           &                                                                                          \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  \left |  \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $    & $\displaystyle  \frac{\displaystyle 0}                       {\displaystyle \pm\ZIN}=0 $ \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $
-						\begin{tabular}
-							{c}
-							$l+(+\ZIN)=l+\ZIN=+\ZIN$ \\
-							$l+(-\ZIN)=l-\ZIN=-\ZIN$
-						\end{tabular}
-					$                             &
-					$
-						l(+\ZIN)=\left\{
-						\begin{tabular}{cl}
-							$ +\ZIN $ & \mbox{se $l>0$} \\
-							$ -\ZIN$  & \mbox{se $l<0$}
-						\end{tabular}
-						\right.
-					$
-					\\
-
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					%           %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-					                              &                                                                                           &
-					\\
-					                              & \begin{tabular}{l}
-						$ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
-						$ 0^{-\ZIN}=+\ZIN    $
-					\end{tabular}
-					                              &
-					$
-						\begin{tabular}{l}
-							$ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
-							\\
-							$\displaystyle    (+\ZIN)^{-\ZIN} =0$
-						\end{tabular}
-					$
-					\\
-					%&&\\
-					                              &                                                                                           &                                                                                          \\
-
-					%  \cline{2-3}
-
-					%%%%%%%%%%%%
-
-					%          &&\\
-					%            \cline{2-3}
-					%             &&\\
-					%                   &       $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $  & 
-					%                   
-					%                   \begin{tabular}{l}
-					%                           $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
-					%                          \\   
-					%                         $\displaystyle    (+\ZIN)^{-\ZIN} =0$ 
-					%                        \end{tabular}
-					%                      
-					%  %                   \\
-					%%%%%%%%%%%%
-
-					%           %%%%%%%%%%%%%%%%%%%%%%%%%                
-					\hline\hline
-					                              &                                                                                           &                                                                                          \\
-					$\begin{array}{l}
-							{\rm Forme} \\
-							{\rm indeterminate}
-						\end{array}$ & $ +\ZIN - \ZIN $                                                                          & $ 0\cdot(\pm\ZIN)  $                                                                     \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $                     & $\displaystyle  \frac{\displaystyle 0}{\displaystyle 0} $                                \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  0^{\displaystyle 0} $ \qquad  $\displaystyle  (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$                                                \\
-					                              &                                                                                           &                                                                                          \\
-					%%%%%%%%%%%%%%%%%
-					%    \cline{2-3}
-					%                                    &&\\
-					%       & $\displaystyle  (+\ZIN)^{\displaystyle 0} $ &  \\
-					%           &&\\
-					%%%%%%%%%%%%%%       
-
-					\hline\hline\hline
+			\hskip -7cm\parbox{3in}{ 
+			
+			\begin{tabular}
+				[h]{||| c|| c| c |||} \hline\hline\hline & & \\
+				Regole & $ +\ZIN +\ZIN =+\ZIN $ & $ -\ZIN -\ZIN =-\ZIN $ \\
+				& & \\
+				\cline{2-3} & & \\
+				& $
+				\begin{array}{l}
+					(+\ZIN)(+\ZIN)=+\ZIN \\
+					(-\ZIN)(-\ZIN)=+\ZIN
+				\end{array}
+				$ & $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$ \\
+				& & \\
+				& & \\
+				\cline{2-3} & & \\
+				& $\displaystyle \left | \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $ & $\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\ZIN}=0 $ \\
+				& & \\
+				\cline{2-3} & & \\
+				& $ 
+				\begin{tabular}
+					{c} $l+(+\ZIN)=l+\ZIN=+\ZIN$ \\
+					$l+(-\ZIN)=l-\ZIN=-\ZIN$ 
 				\end{tabular}
-			}   % fine parbox
+				$ & $ l(+\ZIN)=\left\{ 
+				\begin{tabular}
+					{cl} $ +\ZIN $ & \mbox{se $l>0$} \\
+					$ -\ZIN$ & \mbox{se $l<0$} 
+				\end{tabular}
+				\right. $ \\
+				
+				\cline{2-3} & & \\
+				
+				& & \\
+				& 
+				\begin{tabular}
+					{l} $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
+					$ 0^{-\ZIN}=+\ZIN $ 
+				\end{tabular}
+				& $ 
+				\begin{tabular}
+					{l} $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $ \\
+					$\displaystyle (+\ZIN)^{-\ZIN} =0$ 
+				\end{tabular}
+				$ \\
+				
+				& & \\
+				
+				\hline\hline & & \\
+				$ 
+				\begin{array}{l}
+					{\rm Forme} \\
+					{\rm indeterminate} 
+				\end{array}
+				$ & $ +\ZIN - \ZIN $ & $ 0\cdot(\pm\ZIN) $ \\
+				& & \\
+				\cline{2-3} & & \\
+				& $\displaystyle \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $ & $\displaystyle \frac{\displaystyle 0}{\displaystyle 0} $ \\
+				& & \\
+				\cline{2-3} & & \\
+				& $\displaystyle 0^{\displaystyle 0} $ \qquad $\displaystyle (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$ \\
+				& & \\
+				
+				\hline\hline\hline 
+			\end{tabular}
+			} 
 		\end{center}
 	\end{table}
 \end{center}
-        \end{document}
+\end{document}
         """
         string_to_be = r"""
-                \documentclass[11pt,reqno]{amsart} 
-        \begin{document} 
-        \begin{center}
-	\begin{table}[h]\caption{\ZLA{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate}
-		\smallskip
+\documentclass[11pt,reqno]{amsart}
+\begin{document} 
+\begin{center}
+	\begin{table}
+		[h]\caption{\label{cap2:table:finaleRegCalcFORIND}Regole di calcolo e forme indeterminate} \smallskip 
 		\begin{center}
-			\hskip -7cm\parbox{3in}{  % inizio parbox
-				\begin{tabular}[h]{||| c|| c| c  |||}
-					\hline\hline\hline
-					                              &                                                                                           &                                                                                          \\
-					Regole                        & $  +\ZIN +\ZIN =+\ZIN $                                                                   & $  -\ZIN -\ZIN =-\ZIN $                                                                  \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\begin{array}{l}(+\ZIN)(+\ZIN)=+\ZIN \\
-							(-\ZIN)(-\ZIN)=+\ZIN\end{array}$                                                             & $(-\ZIN)(+\ZIN)=-\ZIN=(+\ZIN)(-\ZIN)$                                                    \\
-					                              &                                                                                           &                                                                                          \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  \left |  \frac{\displaystyle \pm\ZIN}{\displaystyle 0}\right |=+\ZIN $    & $\displaystyle  \frac{\displaystyle 0}                       {\displaystyle \pm\ZIN}=0 $ \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $
-						\begin{tabular}
-							{c}
-							$l+(+\ZIN)=l+\ZIN=+\ZIN$ \\
-							$l+(-\ZIN)=l-\ZIN=-\ZIN$
-						\end{tabular}
-					$                             &
-					$
-						l(+\ZIN)=\left\{
-						\begin{tabular}{cl}
-							$ +\ZIN $ & \mbox{se $l>0$} \\
-							$ -\ZIN$  & \mbox{se $l<0$}
-						\end{tabular}
-						\right.
-					$
-					\\
-
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					%           %%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-					                              &                                                                                           &
-					\\
-					                              & \begin{tabular}{l}
-						$ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $ \\
-						$ 0^{-\ZIN}=+\ZIN    $
-					\end{tabular}
-					                              &
-					$
-						\begin{tabular}{l}
-							$ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
-							\\
-							$\displaystyle    (+\ZIN)^{-\ZIN} =0$
-						\end{tabular}
-					$
-					\\
-					%&&\\
-					                              &                                                                                           &                                                                                          \\
-
-					%  \cline{2-3}
-
-					%%%%%%%%%%%%
-
-					%          &&\\
-					%            \cline{2-3}
-					%             &&\\
-					%                   &       $ \displaystyle 0 ^{\displaystyle +\ZIN}=0 $  & 
-					%                   
-					%                   \begin{tabular}{l}
-					%                           $ \displaystyle (+\ZIN )^{\displaystyle +\ZIN}=+\ZIN $
-					%                          \\   
-					%                         $\displaystyle    (+\ZIN)^{-\ZIN} =0$ 
-					%                        \end{tabular}
-					%                      
-					%  %                   \\
-					%%%%%%%%%%%%
-
-					%           %%%%%%%%%%%%%%%%%%%%%%%%%                
-					\hline\hline
-					                              &                                                                                           &                                                                                          \\
-					$\begin{array}{l}
-							{\rm Forme} \\
-							{\rm indeterminate}
-						\end{array}$ & $ +\ZIN - \ZIN $                                                                          & $ 0\cdot(\pm\ZIN)  $                                                                     \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  \frac{\displaystyle \pm\ZIN}{\displaystyle \pm\ZIN} $                     & $\displaystyle  \frac{\displaystyle 0}{\displaystyle 0} $                                \\
-					                              &                                                                                           &                                                                                          \\
-					\cline{2-3}
-					                              &                                                                                           &                                                                                          \\
-					                              & $\displaystyle  0^{\displaystyle 0} $ \qquad  $\displaystyle  (+\ZIN)^{\displaystyle 0} $ & $\displaystyle 1^{\displaystyle \pm\ZIN}$                                                \\
-					                              &                                                                                           &                                                                                          \\
-					%%%%%%%%%%%%%%%%%
-					%    \cline{2-3}
-					%                                    &&\\
-					%       & $\displaystyle  (+\ZIN)^{\displaystyle 0} $ &  \\
-					%           &&\\
-					%%%%%%%%%%%%%%       
-
-					\hline\hline\hline
+			\hskip -7cm\parbox{3in}{ 
+			
+			\begin{tabular}
+				[h]{||| c|| c| c |||} \hline\hline\hline & & \\
+				Regole & \( +\infty +\infty =+\infty \) & \( -\infty -\infty =-\infty \) \\
+				& & \\
+				\cline{2-3} & & \\
+				& \(
+				\begin{array}{l}
+					(+\infty)(+\infty)=+\infty \\
+					(-\infty)(-\infty)=+\infty
+				\end{array}
+				\) & \((-\infty)(+\infty)=-\infty=(+\infty)(-\infty)\) \\
+				& & \\
+				& & \\
+				\cline{2-3} & & \\
+				& \(\displaystyle \left | \frac{\displaystyle \pm\infty}{\displaystyle 0}\right |=+\infty \) & \(\displaystyle \frac{\displaystyle 0} {\displaystyle \pm\infty}=0 \) \\
+				& & \\
+				\cline{2-3} & & \\
+				& \( 
+				\begin{tabular}
+					{c} \(l+(+\infty)=l+\infty=+\infty\) \\
+					\(l+(-\infty)=l-\infty=-\infty\) 
 				\end{tabular}
-			}   % fine parbox
+				\) & \( l(+\infty)=\left\{ 
+				\begin{tabular}
+					{cl} \( +\infty \) & \mbox{se \(l>0\)} \\
+					\( -\infty\) & \mbox{se \(l<0\)} 
+				\end{tabular}
+				\right. \) \\
+				
+				\cline{2-3} & & \\
+				
+				& & \\
+				& 
+				\begin{tabular}
+					{l} \( \displaystyle 0 ^{\displaystyle +\infty}=0 \) \\
+					\( 0^{-\infty}=+\infty \) 
+				\end{tabular}
+				& \( 
+				\begin{tabular}
+					{l} \( \displaystyle (+\infty )^{\displaystyle +\infty}=+\infty \) \\
+					\(\displaystyle (+\infty)^{-\infty} =0\) 
+				\end{tabular}
+				\) \\
+				
+				& & \\
+				
+				\hline\hline & & \\
+				\( 
+				\begin{array}{l}
+					{\rm Forme} \\
+					{\rm indeterminate} 
+				\end{array}
+				\) & \( +\infty - \infty \) & \( 0\cdot(\pm\infty) \) \\
+				& & \\
+				\cline{2-3} & & \\
+				& \(\displaystyle \frac{\displaystyle \pm\infty}{\displaystyle \pm\infty} \) & \(\displaystyle \frac{\displaystyle 0}{\displaystyle 0} \) \\
+				& & \\
+				\cline{2-3} & & \\
+				& \(\displaystyle 0^{\displaystyle 0} \) \qquad \(\displaystyle (+\infty)^{\displaystyle 0} \) & \(\displaystyle 1^{\displaystyle \pm\infty}\) \\
+				& & \\
+				
+				\hline\hline\hline 
+			\end{tabular}
+			} 
 		\end{center}
 	\end{table}
 \end{center}
-        \end{document}"""
+\end{document}"""
 
-        axmacro = Macro.Methods()
+        axmacro = md.MacroMethods()
 
         axmacro.gather_macro(string_to_parse)
 
         string_parsed = axmacro.remove_macro(string_to_parse, None, False)
-        print(string_parsed)
-
-        self.assertEqual(string_to_be, string_parsed)
-        print(string_parsed)
+        self.assertEqual(string_parsed,string_to_be)
 
 
 class AxessCleanerTextMethods(unittest.TestCase):
@@ -891,7 +822,7 @@ class AxessCleanerTextMethods(unittest.TestCase):
                         "\n"
                         r"\begin{document}")
 
-        text_methods = Text.Methods()
+        text_methods = md.Text()
 
         self.assertEqual(text_methods
                          .add_axessibility(line_no_package)
@@ -903,15 +834,15 @@ class AxessCleanerTextMethods(unittest.TestCase):
 
         line_no_package = '\\usepackage{amsmath} %math'
 
-        text_methods = Text.Methods()
+        text_methods = md.Text()
 
         self.assertEqual(text_methods.find_axessibility(line_package), True)
         self.assertEqual(text_methods.find_axessibility(line_no_package), False)
 
     def test_remove_dollars_from_text_env(self):
-        line_to_sub = r'Test $ f(x)+g(x) = F(x) \mbox{ where $f(x)$ and $g(x)$ are smooth} $'
+        line_to_sub = r'Test $ f(x)+g(x) = F(x) \mbox{ where $f(x)$ and $g(x)$ are smooth} \begin{array}\mbox{$a+b$}\end{array}$'
 
-        subbed_line = r'Test $ f(x)+g(x) = F(x) \mbox{ where \(f(x)\) and \(g(x)\) are smooth} $'
+        subbed_line = r'Test $ f(x)+g(x) = F(x) \mbox{ where \(f(x)\) and \(g(x)\) are smooth} \begin{array}\mbox{\(a+b\)}\end{array}$'
 
         line_to_sub_2 = r'k\mapsto n(k) \quad \mbox{ossia la successione$ \{n_k\} $ \`e {\bf strettamente crescente.}}'
 
@@ -919,7 +850,7 @@ class AxessCleanerTextMethods(unittest.TestCase):
 
         line_3 = r"&&= \frac{A_1}{x-x_0}+\frac{,\mbox{d}}{,\mbox{d} x}\left \{\frac{-A_2}{x-x_0}+\cdots+\frac{A_n}{(1-n)}\frac{1}{(x-x_0)^{n-1}}\right\}\,."
         sub_3 =  r"&&= \frac{A_1}{x-x_0}+\frac{,\mbox{d}}{,\mbox{d} x}\left \{\frac{-A_2}{x-x_0}+\cdots+\frac{A_n}{(1-n)}\frac{1}{(x-x_0)^{n-1}}\right\}\,."
-        rm = Text.Methods().remove_dollars_from_text_env
+        rm = md.Dollars().remove_dollars_from_text_env
 
         self.assertEqual(subbed_line, rm(line_to_sub))
         self.assertEqual(subbed_line_2, rm(line_to_sub_2))
@@ -934,8 +865,8 @@ class AxessCleanerTextMethods(unittest.TestCase):
 
         subbed_line_dd = r'\[\im \lim_{x\to\alpha} \] \[\gamma=\log_a_r \weird{\frac{1}{\{\LL\}}}{a}\alpha d\]'
 
-        rm = Text.Methods().remove_dollars_from_text_env
-        rm_i = Text.Methods().remove_inline_dls
+        rm = md.Dollars().remove_dollars_from_text_env
+        rm_i = md.Dollars().remove_inline_dls
         self.assertEqual(subbed_line, rm_i(rm(line_to_sub),'$'))
         self.assertEqual(subbed_line_dd, rm_i(line_to_sub_dd, '$$'))
         with self.assertRaises(ValueError):
@@ -957,16 +888,25 @@ class AxessCleanerTextMethods(unittest.TestCase):
                   r"\end{tabular}"
                   r"$$")
 
-        self.assertEqual(6, Text.Methods().count_symbols_in_string(string,'$'))
-        self.assertEqual(2, Text.Methods().count_symbols_in_string(string_dd, '$$'))
-        self.assertEqual(0, Text.Methods().count_symbols_in_string(string, '$$'))
+        self.assertEqual(6, md.Dollars().count_symbols_in_string(string, '$'))
+        self.assertEqual(2, md.Dollars().count_symbols_in_string(string_dd, '$$'))
+        self.assertEqual(0, md.Dollars().count_symbols_in_string(string, '$$'))
 
     def test_remove_sparse_dl(self):
         string = r"$& $(-\infty)(+\infty)=-\infty=(+\infty)(-\infty)$ \\"
         string_clean = r"\)& \((-\infty)(+\infty)=-\infty=(+\infty)(-\infty)\) \\"
-        Text.Methods().dl_open = 1
-        self.assertEqual(string_clean, Text.Methods().remove_sparse_dl(string))
+        md.Dollars().dl_open = 1
+        self.assertEqual(string_clean, md.Dollars().remove_sparse_dl(string))
 
+
+    def test_detectEnv(self):
+        string_test=(r"\begin{tabular} $ \begin{"
+                     r"array"
+                     r"} \mbox"
+                     r"{$ a + b}\end{array}")
+        ndls = md.Dollars()
+        ndls.remove_dls_new(string_test)
+        self.assertEqual(len(ndls.dl_open),2)
 
 if __name__ == '__main__':
     unittest.main()

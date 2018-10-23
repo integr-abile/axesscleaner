@@ -1,6 +1,77 @@
+import os
 import re
+import subprocess
 import ply.lex
-from Axesscleaner import Text
+
+
+class Flatex:
+    @staticmethod
+    def is_input(line):
+        """
+        Determines whether or not a read in line contains an uncommented out
+        \input{} statement. Allows only spaces between start of line and
+        '\input{}'.
+        """
+        #tex_input_re = r"""^\s*\\input{[^}]*}""" # input only
+        tex_input_re = r"""(^[^\%]*\\input{[^}]*})|(^[^\%]*\\include{[^}]*})"""  # input or include
+        return re.search(tex_input_re, line)
+
+    @staticmethod
+    def get_input(line):
+        """
+        Gets the file name from a line containing an input statement.
+        """
+        tex_input_filename_re = r"""{[^}]*"""
+        m = re.search(tex_input_filename_re, line)
+        return m.group()[1:]
+
+    @staticmethod
+    def combine_path(base_path, relative_ref):
+        """
+        Combines the base path of the tex document being worked on with the
+        relate reference found in that document.
+        """
+        if (base_path != ""):
+            os.chdir(base_path)
+        # Handle if .tex is supplied directly with file name or not
+        if relative_ref.endswith('.tex'):
+            return os.path.join(base_path, relative_ref)
+        else:
+            return os.path.abspath(relative_ref) + '.tex'
+
+    def expand_file(self, base_file, current_path, include_bbl, noline):
+        """
+        Recursively-defined function that takes as input a file and returns it
+        with all the inputs replaced with the contents of the referenced file.
+        """
+        output_lines = []
+        f = self.open_encode_safe(base_file)
+        for line in f:
+            if self.is_input(line):
+                new_base_file = self.combine_path(current_path, self.get_input(line))
+                output_lines += self.expand_file(new_base_file, current_path, include_bbl, noline)
+                if noline:
+                    pass
+                else:
+                    output_lines.append('\n')  # add a new line after each file input
+            elif include_bbl and line.startswith("\\bibliography") and (not line.startswith("\\bibliographystyle")):
+                output_lines += self.bbl_file(base_file)
+            else:
+                output_lines.append(line)
+        f.close()
+        return output_lines
+
+    def bbl_file(self, base_file):
+        """
+        Return content of associated .bbl file
+        """
+        bbl_path = os.path.abspath(os.path.splitext(base_file)[0]) + '.bbl'
+        return self.open_encode_safe(bbl_path).readlines()
+
+    @staticmethod
+    def open_encode_safe(file):
+
+        return open(file, 'r')
 
 
 class Macro:
@@ -65,14 +136,15 @@ class Macro:
         }
 
 
-class Methods:
+class MacroMethods:
 
     def __init__(self):
         self.macro_list = []
         self.START_PATTERN = 'egin{document}'
         self.END_PATTERN = 'nd{document}'
         self.axessibility_found = False
-        self.text_methods = Text.Methods()
+        self.text_methods = Text()
+        self.dollars_methods = Dollars()
 
     @staticmethod
     def strip_comments(source):
@@ -329,9 +401,9 @@ class Methods:
 
         parsed_list_inline = list(map(lambda item: self.do_inline_sub(item), list_to_parse))
         parsed_list = self.remove_multiline_macros(parsed_list_inline)
-        parsed_list = self.text_methods.remove_dls(parsed_list)
+        parsed_list_dls = self.dollars_methods.remove_dls(parsed_list)
 
-        final_doc.extend(parsed_list)
+        final_doc.extend(parsed_list_dls)
 
         final_doc.extend(end_of_doc)
         if output_file is not None:
@@ -364,13 +436,10 @@ class Methods:
             print('do inline subs - line: ', type(ln), ln)
 
     def remove_multiline_macros(self, array):
-        print("open multline array")
-        print(array)
         temp = []
         is_parsing = False
         line = None
         for yy, lines in enumerate(array):
-            print(lines,yy)
             if r'\@@$$@@!!' in lines:
                 is_parsing = True
                 if line is None:
@@ -404,6 +473,7 @@ class Methods:
         :return: dict
 
         It returns a (potentially empty) dictionary with the structure (see below) of the macro inside the line
+        TODO: Look out for other macros. https://en.wikibooks.org/wiki/LaTeX/Macros
         """
         regexp = r"\\(.*command|DeclareMathOperator|def|edef|xdef|gdef)({|)(\\[a-zA-Z]+)(}|)(\[([0-9])\]|| +)({|#)(.*(?=(\}|\#)))(\#|\}).*$"
         result = re.search(regexp, ln)
@@ -563,3 +633,386 @@ class Methods:
             return replacement_text
         else:
             return rexpr.macro_name.replace('\\', '\\@@$$@@!!')+textafter
+
+
+class Dollars:
+
+    def __init__(self):
+        self.dl_open = [0]
+        self.dd_dls_open = [0]
+        self.newEnv = 0
+        self.line_dl_open = 0
+        self.line_ddl_open = 0
+
+    def remove_dollars_from_text_env(self, line):
+        """
+        :param line: a text line
+        :return: temp: clean string
+
+        It transforms $<stuff, but no $>$ in \(<stuff, but no $>\) only if the pattern is
+        * in one single line
+        * is included in one of the following environments: mbox, mathrm, textrm
+
+        Example
+            1 ) The routine leaves the string untouched:
+
+                input : This is a Formula: $3+4$
+                output  This is a Formula: $3+4$
+            2) The routine modifies the string
+
+                input : Test $ f(x)+g(x) = F(x) \mbox{ where $f(x)$ and $g(x)$ are smooth} $
+                output: Test $ f(x)+g(x) = F(x) \mbox{ where \(f(x)\) and \(g(x)\) are smooth} $
+
+
+
+        """
+        regex = r"(?:\\)(?:mbox|textrm|mathrm)(?:\s*)(?:\{)(.*?)(?<!\\)(?:\})"
+        outer = re.findall(regex, line)
+
+        if outer is not None and len(outer) > 0:
+            subbed = ""+line
+            for out_elm in outer:
+                to_sub = self.remove_inline_dls(out_elm, '$')
+                subbed = re.sub(re.escape(out_elm), re.sub(r'([\\|\"])', r'\\\1', to_sub), subbed)
+            return re.sub(
+                    r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\xff]',
+                    '',
+                    subbed)
+        else:
+            return line
+
+    def remove_inline_dls(self, line, sym):
+
+        """
+                :param line: a text line
+                :param sym: simbol to be removed
+                :return: temp: clean string
+
+                It transforms
+                * $<stuff, but no $>$ in \(<stuff, but no $>\) or
+                * $$<stuff, but no $>$$ in \[<stuff, but no $>\]
+                only if the pattern is in one single line
+
+
+                Example
+                    1 ) The routine leaves the string untouched:
+
+                        input : This is a Formula: $3+4$
+                        output  This is a Formula: \(3+4\)
+
+        """
+
+        if sym == '$':
+            regex = r"(?<!\$)\$([^\$].*?)\$"
+            sym_to_open = '\('
+            sym_to_close = '\)'
+        else:
+            if sym == '$$':
+                regex = r"\$\$(.*?)\$\$"
+                sym_to_open = '\['
+                sym_to_close = '\]'
+            else:
+                raise ValueError('Supported symbols:"$" and "$$"')
+
+        temp = '' + line
+        count = self.count_symbols_in_string(line, sym) % 2
+        # You can manually specify the number of replacements by changing the 4th argument
+
+        search_form = re.search(regex, temp)
+        if search_form and count == 0:
+            try:
+                to_be_subbed = search_form.group(0)
+                to_sub = sym_to_open + search_form.group(1) + sym_to_close
+                temp = temp.replace(to_be_subbed, to_sub)
+                if re.search(regex, temp) is not None:
+                    return self.remove_inline_dls(temp, sym)
+                else:
+                    return temp
+            except Exception as e:
+                print(e)
+        else:
+            return temp
+
+    def count_symbols_in_string(self, lin, symbol):
+        """
+
+        :param lin: line of text, string
+        :return:count, number of symbols in string.
+
+        The method takes the line and counts the number of occurences of the character to sub.
+
+        """
+        if symbol == '$':
+            return len(re.findall(r"(?<!\$)\$", lin))
+        else:
+            if symbol == '$$':
+                return len(re.findall(re.escape("$$"), lin))
+            else:
+                raise ValueError('Supported symbols:"$" and "$$"')
+
+    def find_open_dls(self, sym):
+        if sym == '$':
+            if self.dl_open[self.newEnv] % 2 == 0 and self.dl_open[self.newEnv] > 0:
+                return True
+            else:
+                return False
+        else:
+            if sym == '$$':
+                if self.dd_dls_open[self.newEnv] % 2 == 0 and self.dd_dls_open[self.newEnv] > 0:
+                    return True
+                else:
+                    return False
+            else:
+                raise ValueError('Supported symbols:"$" and "$$"')
+
+    def search_for_environments(self, line):
+
+        regex_plus = r"\\begin({|)(table|tabular)(}|)"
+        regex_minus = r"\\end({|)(table|tabular)(}|)"
+        mn = re.search(regex_minus, line)
+        pl = re.search(regex_plus, line)
+        pl_start = 1
+        pl_end = 0
+        mn_start = 1
+        mn_end = 0
+        if pl is not None:
+            pl_start = pl.start(0)
+            pl_end = pl.end(0)
+        if mn is not None:
+            mn_start = mn.start(0)
+            mn_end = mn.end(0)
+        if pl_end > 0 and pl_start == 0:
+            self.env_management('open')
+            return pl_end
+        else:
+            if mn_end > 0 and mn_start == 0:
+                self.env_management('close')
+                return mn_end
+            else:
+                return 0
+
+    def env_management(self, ops):
+        """
+        :param ops: str
+        :return:
+
+        This method moves on the list to add or remove indentation levels
+        """
+        if ops == 'open':
+            self.dl_open.append(0)
+            self.dd_dls_open.append(0)
+            self.newEnv += 1
+        else:
+            self.dl_open.pop(self.newEnv)
+            self.dd_dls_open.pop(self.newEnv)
+            self.newEnv -= 1
+
+    def remove_sparse_dl(self, line):
+        text_cursor: int = 0
+        sym_count: int = self.count_symbols_in_string(line, '$')
+        sym_overall: int = self.dl_open[self.newEnv] - sym_count
+        sym_progress: int = 0
+        temp: str = ""
+        while text_cursor < len(line) and sym_count > sym_progress:
+            if line[text_cursor] == '$':
+                if (sym_overall+sym_progress) % 2 == 0:
+                    temp += '\('
+                else:
+                    temp += '\)'
+                sym_progress += 1
+            else:
+                temp += line[text_cursor]
+            text_cursor += 1
+        temp += line[text_cursor:]
+        return temp
+
+    def remove_sparse_ddl(self, line):
+
+        text_cursor: int = 0
+        sym_count: int = self.count_symbols_in_string(line, '$$')
+        sym_overall: int = self.dd_dls_open[self.newEnv] - sym_count
+        sym_progress: int = 0
+        temp = ""
+        while text_cursor < len(line)-1 and sym_count>sym_progress:
+            if line[text_cursor] == '$' and line[(text_cursor+1)] == '$':
+                sym_count -= 1
+                if (sym_overall + sym_progress) % 2 == 0:
+                    temp += '\['
+                else:
+                    temp += '\]'
+                text_cursor += 2
+            else:
+                temp += line[text_cursor]
+                text_cursor += 1
+        temp += line[text_cursor:]
+        return temp
+
+    def remove_dls(self, array):
+        temp = "\n".join(array)
+        # Remove dollars from text-like environments
+        temp = self.remove_dollars_from_text_env(temp)
+        temp = self.remove_dls_new(temp)
+        return temp.split('\n')
+        # for jj,line in enumerate(array):
+        #     if not line:
+        #         print('This line'+line)
+        #     # Remove dollars from text-like environments
+        #     math_no_dls = self.remove_dollars_from_text_env(line)
+        #     # Count the single dollars in the given line
+        #     self.line_dl_open = self.count_symbols_in_string(math_no_dls, '$')
+        #     # Count the double dollars in the given line
+        #     self.line_ddl_open = self.count_symbols_in_string(math_no_dls, '$$')
+        #     # Search for new environments
+        #     self.search_for_environments(math_no_dls)
+        #     # Update the overall count
+        #     self.dl_open[self.newEnv] += self.line_dl_open
+        #     self.dd_dls_open[self.newEnv] += self.line_ddl_open
+        #     if self.find_open_dls('$$') and self.line_ddl_open % 2 == 0:
+        #         math_no_dls = self.remove_inline_dls(math_no_dls, '$$')
+        #     else:
+        #         math_no_dls = self.remove_sparse_ddl(math_no_dls)
+        #     if self.find_open_dls('$') and self.line_dl_open % 2 == 0:
+        #         math_no_dls = self.remove_inline_dls(math_no_dls, '$')
+        #     else:
+        #         math_no_dls = self.remove_sparse_dl(math_no_dls)
+        #
+        #     temp.append(math_no_dls)
+        #     return temp
+
+    def remove_dls_new(self,strz):
+        """
+        :param strz:
+        :return:
+        TODO: make docs.
+        """
+        ch_len = len(strz) # String length
+        cnt = 0 # Counter
+        while cnt < ch_len-1:
+            char = strz[cnt]
+            if char == "\\":
+                cnt += self.search_for_environments(strz[cnt:])
+            else:
+                if char == "$":
+                    if cnt > 0:
+                        strz = strz[:(cnt)]+self.replace_dls_with_symbol(strz[cnt:])
+                    else:
+                        strz = ""+self.replace_dls_with_symbol(strz[cnt:])
+                else:
+                    pass
+            cnt += 1
+        return strz
+
+    def replace_dls_with_symbol(self, strz):
+
+        strlist = list(strz)
+        if strlist[1] == "$":
+            if self.dd_dls_open[self.newEnv] == 0:
+                strlist.pop(0)
+                strlist[0] = '['
+                self.dd_dls_open[self.newEnv] = 1
+            else:
+                strlist.pop(0)
+                strlist[0] = ']'
+                self.dd_dls_open[self.newEnv] = 0
+        else:
+            if self.dl_open[self.newEnv] == 0:
+                strlist[0] = '('
+                self.dl_open[self.newEnv] = 1
+            else:
+                strlist[0] = ')'
+                self.dl_open[self.newEnv] = 0
+
+        strz = "".join(['\\']+strlist)
+        return strz
+
+class PerlLauncher:
+
+    def __init__(self, ospath):
+        self.script_path = os.path.abspath(os.path.join(ospath, os.pardir))
+        self.perl_path = os.path.join(os.path.dirname(self.script_path), 'Perl')
+
+    def cleaner(self, input_file, output_file, pdf_check):
+
+
+        # Call perl scripts to clean dollars, underscores.
+        # Eventually, it can call also pdflatex, when pdf_check is true
+        if pdf_check:
+            print("final cleaning file")
+            pre_process_path = os.path.join(
+                self.perl_path,
+                "AxessibilityPreprocesspdfLatex.pl"
+            )
+            message = "cleaning with perl..."
+        else:
+            pre_process_path = os.path.join(
+                self.perl_path,
+                "AxessibilityPreprocess.pl"
+            )
+            message = "cleaning with perl and compiling..."
+
+        cmd_array = [
+                "perl",
+                pre_process_path,
+                "-w",
+                "-o",
+                "-s",
+                input_file,
+                output_file
+            ]
+
+        self.perl_launcher(cmd_array, message)
+
+        # remove spurious file
+        os.remove(input_file)
+        os.remove(input_file.replace('.tex', '.bak'))
+
+    def beautifier(self, input_string, output_file):
+
+        input_file = open(output_file, "w")
+        input_file.write(input_string)
+        input_file.close()
+
+        script = os.path.join(
+            self.perl_path,
+            "latexindent.pl"
+        )
+        message = "Beautify"
+        cmd_array = [
+                "perl",
+                script,
+                "-w",
+                "beautify.tex"
+              ]
+        self.perl_launcher(cmd_array, message)
+
+    @staticmethod
+    def perl_launcher(array, message):
+        #open process
+        p = subprocess.Popen(array)
+        # close process.
+        p.communicate()
+
+
+class Text:
+    @staticmethod
+    def find_axessibility(line):
+        """
+        :param line: string
+        :return: boolean
+
+        Checks if the package axessibility is contained in the given line.
+        """
+        if re.search('sepackage( |){axessibility}', line):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def add_axessibility(line):
+        """
+        :param line: string
+        :return: string
+
+        adds the axessibility.sty package as last import.
+        """
+        return re.sub('\\\\begin{document}', '\\usepackage{axessibility}\n\\\\begin{document}', line)
